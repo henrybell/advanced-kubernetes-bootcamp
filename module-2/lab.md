@@ -63,6 +63,7 @@ tar -xzvf istio-release-0.8-20180425-19-12-linux.tar.gz
 cd istio-release-0.8-20180425-19-12/
 ```
 Install Istio to all three clusters via helm
+
 _Cluster-1_
 ```
 kubectx cluster-1
@@ -252,7 +253,7 @@ NAME
 gcr.io/qwiklabs-gcp-28ba43f03d974ba6/busyboxplus
 gcr.io/qwiklabs-gcp-28ba43f03d974ba6/web-server
 ```
-##Manually deploying Spinnaker pipelines
+## Manually deploying Spinnaker pipelines
 Deploy pipeline via JSON
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/spinnaker
@@ -275,7 +276,7 @@ Run the pipeline manually from the GUI.  Clink on Pipeline link, and then the St
 Each rectangle represents a stage in the pipeline.  Click on various stages to get more details on steps being performed.
 
 Once at the manual judgement stage, pause!
-DO NOT HIT CONTINUE YET!!
+*DO NOT HIT CONTINUE YET!!*
 Click on Clusters to see v1.0.0 pods deployed as canaries to both clusters.
 
 We see one pod (represented as a single rectangle) deployed in both clusters.  Green color represents healthy status.  You can also confirm this in the clusters using kubectl commands.
