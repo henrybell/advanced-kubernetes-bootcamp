@@ -1,0 +1,469 @@
+{
+  "name": "Deploy",
+  "application": "myapp",
+  "appConfig": {},
+  "executionEngine": "v2",
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "anonymous",
+  "limitConcurrent": true,
+  "stages": [
+    {
+      "clusters": [
+        {
+          "account": "gke_PROJECT_GCP_ZONE_cluster-1",
+          "application": "myapp",
+          "cloudProvider": "kubernetes",
+          "containers": [
+            {
+              "args": [
+                "-name=myapp-canary-cl1-$(VOLUME)"
+              ],
+              "command": [],
+              "envFrom": [],
+              "envVars": [
+                {
+                  "name": "VOLUME",
+                  "value": "${trigger['tag']}"
+                }
+              ],
+              "imageDescription": {
+                "account": "gcr",
+                "fromTrigger": true,
+                "imageId": "gcr.io/PROJECT/web-server:v.*",
+                "registry": "gcr.io",
+                "repository": "PROJECT/web-server",
+                "tag": "v.*"
+              },
+              "imagePullPolicy": "IFNOTPRESENT",
+              "limits": {},
+              "name": "PROJECT-web-server",
+              "ports": [
+                {
+                  "containerPort": 80,
+                  "name": "http",
+                  "protocol": "TCP"
+                }
+              ],
+              "requests": {},
+              "volumeMounts": []
+            }
+          ],
+          "deployment": {
+            "deploymentStrategy": {
+              "rollingUpdate": {
+                "maxSurge": "100%",
+                "maxUnavailable": "0%"
+              },
+              "type": "RollingUpdate"
+            },
+            "enabled": true,
+            "minReadySeconds": 0,
+            "revisionHistoryLimit": 2
+          },
+          "dnsPolicy": "ClusterFirst",
+          "freeFormDetails": "cl1",
+          "initContainers": [],
+          "interestingHealthProviderNames": [
+            "KubernetesContainer",
+            "KubernetesPod"
+          ],
+          "loadBalancers": [
+            "myapp-cl1-lb"
+          ],
+          "namespace": "default",
+          "nodeSelector": {},
+          "podAnnotations": {},
+          "provider": "kubernetes",
+          "region": "default",
+          "replicaSetAnnotations": {
+            "deployment.kubernetes.io/desired-replicas": "1",
+            "deployment.kubernetes.io/max-replicas": "2"
+          },
+          "stack": "canary",
+          "strategy": "",
+          "targetSize": 1,
+          "terminationGracePeriodSeconds": 30,
+          "volumeSources": []
+        }
+      ],
+      "name": "Deploy Canary to Cluster-1",
+      "refId": "1",
+      "requisiteStageRefIds": [],
+      "type": "deploy"
+    },
+    {
+      "clusters": [
+        {
+          "account": "gke_PROJECT_GCP_ZONE_cluster-2",
+          "application": "myapp",
+          "cloudProvider": "kubernetes",
+          "containers": [
+            {
+              "args": [
+                "-name=myapp-canary-cl2-$(VOLUME)"
+              ],
+              "command": [],
+              "envFrom": [],
+              "envVars": [
+                {
+                  "name": "VOLUME",
+                  "value": "${trigger['tag']}"
+                }
+              ],
+              "imageDescription": {
+                "account": "gcr",
+                "fromTrigger": true,
+                "imageId": "gcr.io/PROJECT/web-server:v.*",
+                "registry": "gcr.io",
+                "repository": "PROJECT/web-server",
+                "tag": "v.*"
+              },
+              "imagePullPolicy": "IFNOTPRESENT",
+              "limits": {},
+              "name": "PROJECT-web-server",
+              "ports": [
+                {
+                  "containerPort": 80,
+                  "name": "http",
+                  "protocol": "TCP"
+                }
+              ],
+              "requests": {},
+              "volumeMounts": []
+            }
+          ],
+          "deployment": {
+            "deploymentStrategy": {
+              "rollingUpdate": {
+                "maxSurge": "100%",
+                "maxUnavailable": "0%"
+              },
+              "type": "RollingUpdate"
+            },
+            "enabled": true,
+            "minReadySeconds": 0,
+            "revisionHistoryLimit": 2
+          },
+          "dnsPolicy": "ClusterFirst",
+          "freeFormDetails": "cl2",
+          "initContainers": [],
+          "interestingHealthProviderNames": [
+            "KubernetesContainer",
+            "KubernetesPod"
+          ],
+          "loadBalancers": [
+            "myapp-cl2-lb"
+          ],
+          "namespace": "default",
+          "nodeSelector": {},
+          "podAnnotations": {},
+          "provider": "kubernetes",
+          "region": "default",
+          "replicaSetAnnotations": {
+            "deployment.kubernetes.io/desired-replicas": "1",
+            "deployment.kubernetes.io/max-replicas": "2"
+          },
+          "stack": "canary",
+          "strategy": "",
+          "targetSize": 1,
+          "terminationGracePeriodSeconds": 30,
+          "volumeSources": []
+        }
+      ],
+      "name": "Deploy Canary to Cluster-2",
+      "refId": "2",
+      "requisiteStageRefIds": [],
+      "type": "deploy"
+    },
+    {
+      "account": "gke_PROJECT_GCP_ZONE_cluster-1",
+      "annotations": {},
+      "application": "myapp",
+      "cloudProvider": "kubernetes",
+      "cloudProviderType": "kubernetes",
+      "containers": [
+        {
+          "args": [],
+          "command": [
+            "curl",
+            "http://myapp-cl1-lb:80"
+          ],
+          "envFrom": [],
+          "envVars": [],
+          "imageDescription": {
+            "account": "gcr",
+            "imageId": "gcr.io/PROJECT/busyboxplus:latest",
+            "registry": "gcr.io",
+            "repository": "PROJECT/busyboxplus",
+            "tag": "latest"
+          },
+          "imagePullPolicy": "IFNOTPRESENT",
+          "limits": {},
+          "name": "PROJECT-busyboxplus",
+          "ports": [
+            {
+              "containerPort": 80,
+              "name": "http",
+              "protocol": "TCP"
+            }
+          ],
+          "requests": {},
+          "volumeMounts": []
+        }
+      ],
+      "dnsPolicy": "ClusterFirst",
+      "labels": {},
+      "name": "Test Canary on Cluster-1",
+      "namespace": "default",
+      "refId": "3",
+      "requisiteStageRefIds": [
+        "1"
+      ],
+      "type": "runJob"
+    },
+    {
+      "account": "gke_PROJECT_GCP_ZONE_cluster-2",
+      "annotations": {},
+      "application": "myapp",
+      "cloudProvider": "kubernetes",
+      "cloudProviderType": "kubernetes",
+      "containers": [
+        {
+          "args": [],
+          "command": [
+            "curl",
+            "http://myapp-cl2-lb:80"
+          ],
+          "envFrom": [],
+          "envVars": [],
+          "imageDescription": {
+            "account": "gcr",
+            "imageId": "gcr.io/PROJECT/busyboxplus:latest",
+            "registry": "gcr.io",
+            "repository": "PROJECT/busyboxplus",
+            "tag": "latest"
+          },
+          "imagePullPolicy": "IFNOTPRESENT",
+          "limits": {},
+          "name": "PROJECT-busyboxplus",
+          "ports": [
+            {
+              "containerPort": 80,
+              "name": "http",
+              "protocol": "TCP"
+            }
+          ],
+          "requests": {},
+          "volumeMounts": []
+        }
+      ],
+      "dnsPolicy": "ClusterFirst",
+      "labels": {},
+      "name": "Test Canary on Cluster-2",
+      "namespace": "default",
+      "refId": "4",
+      "requisiteStageRefIds": [
+        "2"
+      ],
+      "type": "runJob"
+    },
+    {
+      "failPipeline": true,
+      "instructions": "Deploy to Production?",
+      "judgmentInputs": [],
+      "name": "Deploy to Production?",
+      "notifications": [],
+      "refId": "5",
+      "requisiteStageRefIds": [
+        "3",
+        "4"
+      ],
+      "type": "manualJudgment"
+    },
+    {
+      "clusters": [
+        {
+          "account": "gke_PROJECT_GCP_ZONE_cluster-1",
+          "application": "myapp",
+          "cloudProvider": "kubernetes",
+          "containers": [
+            {
+              "args": [
+                "-name=myapp-prod-cl1-$(VOLUME)"
+              ],
+              "command": [],
+              "envFrom": [],
+              "envVars": [
+                {
+                  "name": "VOLUME",
+                  "value": "${trigger['tag']}"
+                }
+              ],
+              "imageDescription": {
+                "account": "gcr",
+                "fromTrigger": true,
+                "imageId": "gcr.io/PROJECT/web-server:v.*",
+                "registry": "gcr.io",
+                "repository": "PROJECT/web-server",
+                "tag": "v.*"
+              },
+              "imagePullPolicy": "IFNOTPRESENT",
+              "limits": {},
+              "name": "PROJECT-web-server",
+              "ports": [
+                {
+                  "containerPort": 80,
+                  "name": "http",
+                  "protocol": "TCP"
+                }
+              ],
+              "requests": {},
+              "volumeMounts": []
+            }
+          ],
+          "deployment": {
+            "deploymentStrategy": {
+              "rollingUpdate": {
+                "maxSurge": "100%",
+                "maxUnavailable": "0%"
+              },
+              "type": "RollingUpdate"
+            },
+            "enabled": true,
+            "minReadySeconds": 0,
+            "revisionHistoryLimit": 2
+          },
+          "dnsPolicy": "ClusterFirst",
+          "freeFormDetails": "cl1",
+          "initContainers": [],
+          "interestingHealthProviderNames": [
+            "KubernetesContainer",
+            "KubernetesPod"
+          ],
+          "loadBalancers": [
+            "myapp-cl1-lb"
+          ],
+          "namespace": "default",
+          "nodeSelector": {},
+          "podAnnotations": {},
+          "provider": "kubernetes",
+          "region": "default",
+          "replicaSetAnnotations": {
+            "deployment.kubernetes.io/desired-replicas": "4",
+            "deployment.kubernetes.io/max-replicas": "8"
+          },
+          "stack": "prod",
+          "strategy": "",
+          "targetSize": 4,
+          "terminationGracePeriodSeconds": 30,
+          "volumeSources": []
+        }
+      ],
+      "name": "Deploy on Cluster-1 Production",
+      "refId": "6",
+      "requisiteStageRefIds": [
+        "5"
+      ],
+      "type": "deploy"
+    },
+    {
+      "clusters": [
+        {
+          "account": "gke_PROJECT_GCP_ZONE_cluster-2",
+          "application": "myapp",
+          "cloudProvider": "kubernetes",
+          "containers": [
+            {
+              "args": [
+                "-name=myapp-prod-cl2-$(VOLUME)"
+              ],
+              "command": [],
+              "envFrom": [],
+              "envVars": [
+                {
+                  "name": "VOLUME",
+                  "value": "${trigger['tag']}"
+                }
+              ],
+              "imageDescription": {
+                "account": "gcr",
+                "fromTrigger": true,
+                "imageId": "gcr.io/PROJECT/web-server:v.*",
+                "registry": "gcr.io",
+                "repository": "PROJECT/web-server",
+                "tag": "v.*"
+              },
+              "imagePullPolicy": "IFNOTPRESENT",
+              "limits": {},
+              "name": "PROJECT-web-server",
+              "ports": [
+                {
+                  "containerPort": 80,
+                  "name": "http",
+                  "protocol": "TCP"
+                }
+              ],
+              "requests": {},
+              "volumeMounts": []
+            }
+          ],
+          "deployment": {
+            "deploymentStrategy": {
+              "rollingUpdate": {
+                "maxSurge": "100%",
+                "maxUnavailable": "0%"
+              },
+              "type": "RollingUpdate"
+            },
+            "enabled": true,
+            "minReadySeconds": 0,
+            "revisionHistoryLimit": 2
+          },
+          "dnsPolicy": "ClusterFirst",
+          "freeFormDetails": "cl2",
+          "initContainers": [],
+          "interestingHealthProviderNames": [
+            "KubernetesContainer",
+            "KubernetesPod"
+          ],
+          "loadBalancers": [
+            "myapp-cl2-lb"
+          ],
+          "namespace": "default",
+          "nodeSelector": {},
+          "podAnnotations": {},
+          "provider": "kubernetes",
+          "region": "default",
+          "replicaSetAnnotations": {
+            "deployment.kubernetes.io/desired-replicas": "4",
+            "deployment.kubernetes.io/max-replicas": "8"
+          },
+          "stack": "prod",
+          "strategy": "",
+          "targetSize": 4,
+          "terminationGracePeriodSeconds": 30,
+          "volumeSources": []
+        }
+      ],
+      "name": "Deploy on Cluster-2 Production",
+      "refId": "7",
+      "requisiteStageRefIds": [
+        "5"
+      ],
+      "type": "deploy"
+    }
+  ],
+  "triggers": [
+    {
+      "account": "gcr",
+      "enabled": true,
+      "fromTrigger": true,
+      "organization": "PROJECT",
+      "registry": "gcr.io",
+      "repository": "PROJECT/web-server",
+      "tag": "v.*",
+      "type": "docker"
+    }
+  ],
+  "updateTs": "1522791278049"
+}
