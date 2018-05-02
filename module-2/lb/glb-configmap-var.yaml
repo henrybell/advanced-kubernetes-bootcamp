@@ -37,8 +37,8 @@ data:
     }
   load-balancer.conf: |
     upstream example.com {
-      server CLUSTER1_INGRESS_IP weight=1;
-      server CLUSTER2_INGRESS_IP weight=1;
+      server CLUSTER1_INGRESS_IP;
+      server CLUSTER2_INGRESS_IP;
     }
     server {
       listen 80;
