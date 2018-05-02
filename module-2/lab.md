@@ -266,12 +266,16 @@ sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- 
 Click on Pipeline and click Configure > Deploy to inspect it.
 
 
-The Deploy pipeline deploys canary to both clusters (cluster-1 and cluster-2), it then tests the canaries.  There is a manual judgement stage prompting a user to proceed.  After the user hits proceed, application is deployed to both clusters in production.
+The Deploy pipeline deploys canary to both clusters (cluster-1 and cluster-2), it then tests the canaries.  
+There is a manual judgement stage prompting a user to proceed.  
+After the user hits proceed, application is deployed to both clusters in production.
 Click on individual stages in the pipeline to inspect them in detail.
-In `Configuration` stage, we use version tag to trigger the pipeline.  Every time the version is changed on the image, the pipeline is automatically triggered.
-`Deploy` stages are Kubernetes Deployments, with Services and Ingresses created in the previous section..
-For Test stages, we do a simple `curl` to our web-server app and ensure liveness.
-`Deploy to Production` is a manual judgement stage.
+
+* In `Configuration` stage, we use version tag to trigger the pipeline.  Every time the version is changed on the image, the pipeline is automatically triggered.
+* `Deploy` stages are Kubernetes Deployments, with Services and Ingresses created in the previous section..
+* For Test stages, we do a simple `curl` to our web-server app and ensure liveness.
+* `Deploy to Production` is a manual judgement stage.
+
 Run the pipeline manually from the GUI.  Clink on Pipeline link, and then the Start Manual Execution button.  
 
 Each rectangle represents a stage in the pipeline.  Click on various stages to get more details on steps being performed.
