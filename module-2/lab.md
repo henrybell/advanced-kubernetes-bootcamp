@@ -1,4 +1,5 @@
 # Lab Guide
+Run this lab from Cloud Shell
 ## Repo
 Get all files associated with this workshop by cloning the following repo.
 ```
