@@ -303,7 +303,7 @@ Once at the manual judgement stage, pause!
 
 **DO NOT HIT CONTINUE YET!**
 
-![Spin Manual Judgement](diagrams/manual-judgement-continue.png)
+![Spin Manual Judgement](diagrams/spin-manual-judgement-continue.png)
 
 Click on **Clusters** to see `v1.0.0` pods deployed as canaries to both clusters.
 
