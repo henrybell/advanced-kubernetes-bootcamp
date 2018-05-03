@@ -225,7 +225,7 @@ You get the Spinnaker GUI with the header as shown below
 
 Create an app in Spinnaker named `myapp` by clicking on **Action** and **Create App**.
 
-![Cloud Shell Preview](diagrams/spin-action-create-app.png)
+![Spin Create App](diagrams/spin-action-create-app.png)
 
 Only provide app name `myapp` and email which can be arbitrary like `abc@xyz.com`.  Leave everything else blank or default.
 
@@ -276,6 +276,9 @@ sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- 
 ```
 Click on **Pipeline** and click **Configure > Deploy** to inspect it.
 
+![Spin Pipelines](diagrams/spin-pipelines.png)
+
+![Spin Deploy Pipeline](diagrams/spin-deploy-pipeline.png)
 
 The `Deploy` pipeline deploys canary to both clusters (`cluster-1` and `cluster-2`), it then tests the canaries.  There is a `manual judgement` stage prompting a user to proceed.  After the user hits continue, application is deployed to both clusters in production.
 
