@@ -31,7 +31,9 @@ gcloud container clusters create cluster-1 --async --num-nodes 2 --cluster-versi
 gcloud container clusters create cluster-2 --async --num-nodes 2 --cluster-version=1.9.6-gke.1
 gcloud container clusters create cluster-3 --async --machine-type=n1-standard-2 --cluster-version=1.9.6-gke.1
 ```
-Create kubeconfig for all three clusters.
+Clusters take 3-5 minutes to be deployed and ready.  Check the Cloud Console **Kubernetes Engine > Kubernetes clusters** page for status.
+
+After the clusters are Ready, create `kubeconfig` for all three clusters.
 ```
 gcloud container clusters get-credentials cluster-1 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
 gcloud container clusters get-credentials cluster-2 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
@@ -73,7 +75,7 @@ kubectl create serviceaccount tiller --namespace kube-system
 kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
 helm init --service-account=tiller
 ```
-After tiller is installed, Install Istio via helm chart with sidecar injector as shown below.
+Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
 ```
 helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
 ```
@@ -85,7 +87,7 @@ kubectl create serviceaccount tiller --namespace kube-system
 kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
 helm init --service-account=tiller
 ```
-After tiller is installed, Install Istio via helm chart with sidecar injector as shown below.
+Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
 ```
 helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
 ```
@@ -97,7 +99,7 @@ kubectl create serviceaccount tiller --namespace kube-system
 kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
 helm init --service-account=tiller
 ```
-After tiller is installed, Install Istio via helm chart with sidecar injector as shown below.
+Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
 ```
 helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
 ```
@@ -111,6 +113,11 @@ Confirm _ISTIO-INJECTION_ is enabled on both `cluster-1` and `cluster-2`
 kubectl get namespace -L istio-injection --context cluster-1
 kubectl get namespace -L istio-injection --context cluster-2
 ```
+_Output_
+```
+
+```
+
 ## Install Spinnaker on cluster-3
 Switch to `cluster-3` context
 ```
