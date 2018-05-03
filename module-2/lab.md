@@ -266,9 +266,8 @@ sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- 
 Click on Pipeline and click Configure > Deploy to inspect it.
 
 
-The Deploy pipeline deploys canary to both clusters (cluster-1 and cluster-2), it then tests the canaries.  
-There is a manual judgement stage prompting a user to proceed.  
-After the user hits proceed, application is deployed to both clusters in production.
+The Deploy pipeline deploys canary to both clusters (cluster-1 and cluster-2), it then tests the canaries.  There is a manual judgement stage prompting a user to proceed.  After the user hits proceed, application is deployed to both clusters in production.
+
 Click on individual stages in the pipeline to inspect them in detail.
 
 * In `Configuration` stage, we use version tag to trigger the pipeline.  Every time the version is changed on the image, the pipeline is automatically triggered.
