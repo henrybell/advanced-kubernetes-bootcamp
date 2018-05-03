@@ -9,7 +9,7 @@ spec:
   route:
   - labels:
       stack: prod
-    weight: 50
+    weight: 95
   - labels:
       stack: canary
-    weight: 50
+    weight: 5
