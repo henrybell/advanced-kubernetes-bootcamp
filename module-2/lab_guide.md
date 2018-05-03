@@ -118,7 +118,11 @@ kubectl get namespace -L istio-injection --context cluster-2
 ```
 _Output_
 ```
-
+NAME           STATUS    AGE       ISTIO-INJECTION
+default        Active    7m        enabled
+istio-system   Active    3m
+kube-public    Active    7m
+kube-system    Active    7m
 ```
 
 ## Install Spinnaker on cluster-3
