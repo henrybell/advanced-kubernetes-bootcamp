@@ -68,7 +68,7 @@
 
 # Lab Guide
 
-[Lab Guide]()
+[Lab Guide](lab_guide.md)
 
 # Presentations
 
