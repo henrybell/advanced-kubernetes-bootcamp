@@ -25,7 +25,7 @@ Set default zone.
 ```
 gcloud config set compute/zone us-west1-a
 ```
-Create 3 Kubernetes Engine clusters.  Cluster-3 needs to be 3 nodes with n1-standard-2 due to Spinnaker compute requirements.  Cluster-1 and 2 run the applications and cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.
+Create 3 Kubernetes Engine clusters.  Cluster-3 needs to be 3 nodes with n1-standard-2 due to Spinnaker compute requirements.  Cluster-1 and cluster-2 run the applications.  Cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.
 ```
 gcloud container clusters create cluster-1 --async --num-nodes 2 --cluster-version=1.9.6-gke.1
 gcloud container clusters create cluster-2 --async --num-nodes 2 --cluster-version=1.9.6-gke.1
@@ -55,7 +55,7 @@ cluster-3
 ```
 Current context is highlighted.
 ## Install Istio on all three clusters
-Download istio nightly build for 0.8 (should be released by bootcamp)
+Download istio nightly build for 0.8 (*should be released by bootcamp*)
 ```
 mkdir istio8
 cd istio8
@@ -152,8 +152,9 @@ Ensure that client certs are present in the kubeconfig file
 ```
 cat ~/.kube/config
 ```
-Output should show `client-certificate-data` and `client-key-data` under the user stanza for cluster-1 and cluster-2 contexts.
-Create a secret from the kubeconfig file for Spinnaker
+Output should show `client-certificate-data` and `client-key-data` under the `user` stanza for `cluster-1` and `cluster-2` contexts.
+
+Create a secret from the `kubeconfig` file for Spinnaker
 ```
 kubectx cluster-3
 kubectl create secret generic --from-file=config=$HOME/.kube/config mc-taw-spinnaker-kubeconfig
@@ -203,7 +204,9 @@ Ensure the file has the correct values for the `SA_JSON` and `BUCKET` variables.
 ```
 cat spinnaker-config.yaml
 ```
-Install Spinnaker.  _This step could take up to 10 minutes (hence the timeout of 600 seconds below)_
+Install Spinnaker.  
+
+***This step could take up to 10 minutes (hence the timeout of 600 seconds below)***
 ```
 helm install -n mc-taw . -f spinnaker-config.yaml --timeout 600
 ```
@@ -266,7 +269,7 @@ sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- 
 Click on **Pipeline** and click **Configure > Deploy** to inspect it.
 
 
-The `Deploy` pipeline deploys canary to both clusters (cluster-1 and cluster-2), it then tests the canaries.  There is a manual judgement stage prompting a user to proceed.  After the user hits proceed, application is deployed to both clusters in production.
+The `Deploy` pipeline deploys canary to both clusters (`cluster-1` and `cluster-2`), it then tests the canaries.  There is a manual judgement stage prompting a user to proceed.  After the user hits proceed, application is deployed to both clusters in production.
 
 Click on individual stages in the pipeline to inspect them in detail.
 
@@ -285,7 +288,7 @@ Once at the manual judgement stage, pause!
 
 Click on **Clusters** to see `v1.0.0` pods deployed as canaries to both clusters.
 
-You see one pod (represented as a single rectangle) deployed in both clusters.  Green color represents healthy status.  You can also confirm this in the clusters using `kubectl` commands.
+You see one (1) pod (represented as a single rectangle) deployed in both clusters.  Green color represents healthy status.  You can also confirm this in the clusters using `kubectl` commands.
 
 Ensure both pods are exposed via Istio ingress in each cluster.
 
