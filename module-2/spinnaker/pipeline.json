@@ -177,7 +177,9 @@
     },
     {
       "account": "gke_PROJECT_GCP_ZONE_cluster-1",
-      "annotations": {},
+      "annotations": {
+        "sidecar.istio.io/inject": "false"
+      },
       "application": "myapp",
       "cloudProvider": "kubernetes",
       "cloudProviderType": "kubernetes",
@@ -223,7 +225,9 @@
     },
     {
       "account": "gke_PROJECT_GCP_ZONE_cluster-2",
-      "annotations": {},
+      "annotations": {
+        "sidecar.istio.io/inject": "false"
+      },
       "application": "myapp",
       "cloudProvider": "kubernetes",
       "cloudProviderType": "kubernetes",
