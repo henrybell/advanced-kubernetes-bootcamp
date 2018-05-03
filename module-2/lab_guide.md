@@ -217,11 +217,15 @@ kubectl port-forward --namespace default $DECK_POD 8080:9000 --context cluster-3
 ```
 Access the Spinnaker GUI using the Cloud Shell Preview
 
-![Module-2. Lab Diagram]()*Module-2. Lab Diagram*
+![Cloud Shell Preview](diagrams/cloud-shell-preview.png)
 
 You get the Spinnaker GUI with the header as shown below
 
+![Spinnaker Header](diagrams/spin-header.png)
+
 Create an app in Spinnaker named `myapp`
+
+![Cloud Shell Preview](diagrams/cloud-shell-preview.png)
 
 To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or `Clusters`) and Ingresss (or `Security Groups`) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
 ```
