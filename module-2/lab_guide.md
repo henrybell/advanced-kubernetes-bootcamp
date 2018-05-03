@@ -405,7 +405,7 @@ Click on **Pipelines** and refresh the page (if needed).  You see the pipeline b
 
 Click on **Clusters**.  You can see one canary pod of `v1.0.1` and four production pods of `v1.0.0` running in both clusters.
 
-<img src="diagrams/spin-v101-canary-v100-prod.png">
+<img src="diagrams/spin-v101-canary-v100-prod.png" width="600">
 
 ## Traffic Management with Istio
 By default, traffic gets evenly split to all pods within a service.  The service has five (5) pods total.  One (1) pod is running the newer canary version `v1.0.1` and four (4) pods are running the production version `v1.0.0`.
