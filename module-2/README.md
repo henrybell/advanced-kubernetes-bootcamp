@@ -66,6 +66,10 @@
 
 +  Use _RouteRules_ to route traffic between _prod_ and _canary_ releases within each cluster (10 mins)
 
+# Lab Guide
+
+[Lab Guide]()
+
 # Presentations
 
 Dependent upon labs
