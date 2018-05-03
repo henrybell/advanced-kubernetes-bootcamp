@@ -329,7 +329,8 @@ You see one (1) pod (represented as a single rectangle) deployed in both cluster
 
 Ensure both pods are exposed via Istio ingress in each cluster.
 
-Click on **Security Groups**.  Click on the application in both clusters and then **Status** dropdown from the right hand details box.
+Click on **Security Groups**.  If none show up refresh the browser.  
+Click on the application in both clusters and then **Status** dropdown from the right hand details box.
 
 <img src="diagrams/spin-sg-status-ip.png" width="600">
 
