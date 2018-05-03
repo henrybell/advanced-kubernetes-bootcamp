@@ -223,9 +223,11 @@ You get the Spinnaker GUI with the header as shown below
 
 ![Spinnaker Header](diagrams/spin-header.png)
 
-Create an app in Spinnaker named `myapp`
+Create an app in Spinnaker named `myapp` by clicking on **Action** and **Create App**.
 
-![Cloud Shell Preview](diagrams/cloud-shell-preview.png)
+![Cloud Shell Preview](diagrams/spin-action-create-app.png)
+
+Only provide app name `myapp` and email which can be arbitrary like `abc@xyz.com`.  Leave everything else blank or default.
 
 To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or `Clusters`) and Ingresss (or `Security Groups`) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
 ```
