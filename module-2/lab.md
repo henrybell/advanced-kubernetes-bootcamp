@@ -263,10 +263,10 @@ sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- 
     POST --header "Content-Type: application/json" --header \
     "Accept: /" http://localhost:8080/gate/pipelines
 ```
-Click on Pipeline and click Configure > Deploy to inspect it.
+Click on **Pipeline** and click **Configure > Deploy** to inspect it.
 
 
-The Deploy pipeline deploys canary to both clusters (cluster-1 and cluster-2), it then tests the canaries.  There is a manual judgement stage prompting a user to proceed.  After the user hits proceed, application is deployed to both clusters in production.
+The `Deploy` pipeline deploys canary to both clusters (cluster-1 and cluster-2), it then tests the canaries.  There is a manual judgement stage prompting a user to proceed.  After the user hits proceed, application is deployed to both clusters in production.
 
 Click on individual stages in the pipeline to inspect them in detail.
 
@@ -275,19 +275,24 @@ Click on individual stages in the pipeline to inspect them in detail.
 * For Test stages, we do a simple `curl` to our web-server app and ensure liveness.
 * `Deploy to Production` is a manual judgement stage.
 
-Run the pipeline manually from the GUI.  Clink on Pipeline link, and then the Start Manual Execution button.  
+Run the pipeline manually from the GUI.  Clink on **Pipeline** link, and then the **Start Manual Execution** button.  
 
 Each rectangle represents a stage in the pipeline.  Click on various stages to get more details on steps being performed.
 
 Once at the manual judgement stage, pause!
-*DO NOT HIT CONTINUE YET!!*
-Click on Clusters to see v1.0.0 pods deployed as canaries to both clusters.
 
-We see one pod (represented as a single rectangle) deployed in both clusters.  Green color represents healthy status.  You can also confirm this in the clusters using kubectl commands.
+**DO NOT HIT CONTINUE YET!**
+
+Click on **Clusters** to see `v1.0.0` pods deployed as canaries to both clusters.
+
+You see one pod (represented as a single rectangle) deployed in both clusters.  Green color represents healthy status.  You can also confirm this in the clusters using `kubectl` commands.
+
 Ensure both pods are exposed via Istio ingress in each cluster.
-Click on Security Groups.  Click on the application in both clusters and then Status dropdown from the right hand details box.
+
+Click on **Security Groups**.  Click on the application in both clusters and then **Status** dropdown from the right hand details box.
 
 You see the ingress IP address for both cluster.
+
 Curl both IPs to see the environment (canary or prod) and version of the application.  For example.
 ```
 curl 35.185.215.157
@@ -298,13 +303,13 @@ myapp-canary-cl1-v1.0.0
 ```
 ## Globally load balance client traffic to both clusters
 For this workshop, we use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io are few of the companies that provide this functionality.  
+
 Store the ingress IP addresses for the two clusters in variables
 ```
 export CLUSTER1_INGRESS_IP=$(kubectl get ingress myapp-cl1-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-1)
 export CLUSTER2_INGRESS_IP=$(kubectl get ingress myapp-cl2-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-2)
 ```
-We can use cluster-3 for global load balancing.  
-Create the NGINX configmap in cluster-3
+We can use cluster-3 for global load balancing.  Create the NGINX configmap in cluster-3
 ```
 kubectx cluster-3
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
@@ -333,6 +338,7 @@ export GLB_IP=$(kubectl get service global-lb-nginx -o jsonpath='{.status.loadBa
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
 Traffic to the 2 canary pods is being split 50/50.  This ratio can be controlled by the `weight` field in the ConfigMap we generated earlier.
+
 Adjust the `weight` fields in the ConfigMap.  Apply the new configmap and deployment.
 ```
 sed -e s/CLUSTER1_INGRESS_IP/$CLUSTER1_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$CLUSTER2_INGRESS_IP\ weight=4/g glb-configmap-var.yaml > glb-configmap-2.yaml
@@ -346,10 +352,11 @@ Do a for loop curl on the `GLB_IP` and you can see more traffic going to cluster
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
 ## Triggering application updates in Spinnaker
-Return to the Spinnaker GUI and finish deploying the pipeline by hitting continue on the manual judgement stage.
-Click on Pipelines and click Continue on the manual judgement phase.
+Return to the Spinnaker GUI and finish deploying the pipeline.
 
-After the pipeline completes, click on Clusters.  In addition to the single canary pod, you can see 4 pods of v1.0.0 running in production in both clusters.
+Click on **Pipelines** and click **Continue** on the manual judgement phase.
+
+After the pipeline completes, click on **Clusters**.  In addition to the single canary pod, you can see 4 pods of `v1.0.0` running in production in both clusters.
 
 You can now update the application by updating the version number from `v1.0.0` to `v1.0.1` in Container Registry.  This simulates application update and triggers the Deploy pipeline.
 ```
@@ -358,22 +365,25 @@ MYAPP_IMAGE_ID=$(docker images gcr.io/$PROJECT/web-server --format "{{.ID}}")
 docker tag $MYAPP_IMAGE_ID gcr.io/$PROJECT/web-server:v1.0.1
 gcloud docker -- push gcr.io/$PROJECT/web-server:v1.0.1
 ```
-Click on Pipelines and refresh the page if needed.  You can see the pipeline being triggered.
-STOP at the manual judgement stage.
-DO NOT HIT CONTINUE!
+Click on **Pipelines** and refresh the page (if needed).  You see the pipeline being triggered.
 
-Click on Clusters.  You can see one canary pod of `v1.0.1` and four production pods of `v1.0.0` running in both clusters.
+**STOP** at the manual judgement stage.
+
+**DO NOT HIT CONTINUE YET!**
+
+Click on **Clusters**.  You can see one canary pod of `v1.0.1` and four production pods of `v1.0.0` running in both clusters.
 
 ## Traffic Management with Istio
-By default, traffic gets evenly split to all pods within a service.  The service has 5 pods total.  One pod is running the newer canary version v1.0.1 and four pods are running the production version v1.0.0.
+By default, traffic gets evenly split to all pods within a service.  The service has five (5) pods total.  One (1) pod is running the newer canary version `v1.0.1` and four (4) pods are running the production version `v1.0.0`.
+
 Do a for loop curl on Ingress IP addresses for cluster-1 and cluster-2.
 ```
 for i in `seq 1 20`; do curl $CLUSTER1_INGRESS_IP; done
 for i in `seq 1 20`; do curl $CLUSTER2_INGRESS_IP; done
 ```
-You can see about about 20% of the traffic going to v1.0.1 (canary) and 80% to production v1.0.0.
-We can use Istio to manipulate traffic inside the cluster.
+You can see about about 20% of the traffic going to `v1.0.1` (canary) and 80% to production `v1.0.0`.  We can use Istio to manipulate traffic inside the cluster.
 We can use:
-`RouteRules` to direct traffic to different versions of the service.
-Rate Limit based on number of connections
+* `RouteRules` to direct traffic to different versions of the service.
+* Rate Limit based on number of connections
+
 ### Controlling traffic to production and canary releases
