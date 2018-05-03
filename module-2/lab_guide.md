@@ -33,6 +33,9 @@ gcloud container clusters create cluster-3 --async --machine-type=n1-standard-2 
 ```
 Clusters take 3-5 minutes to be deployed and ready.  Check the Cloud Console **Kubernetes Engine > Kubernetes clusters** page for status.
 
+<img src="diagrams/kube-clusters-status.png">
+
+
 After the clusters are Ready, create `kubeconfig` for all three clusters.
 ```
 gcloud container clusters get-credentials cluster-1 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
