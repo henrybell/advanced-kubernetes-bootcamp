@@ -438,3 +438,107 @@ We can use:
 * Rate Limit based on number of connections
 
 ### Controlling traffic to production and canary releases
+
+Lets send 100% of the traffic to `prod` pods in `cluster-1`
+```
+kubectx cluster-1
+kubectl apply -f myapp-rr-100p.yaml
+```
+Inspect the `RouteRule`
+```
+kubectl describe routerules
+```
+_Output excerpt_
+```
+Spec:
+  Destination:
+    Domain:  svc.cluster.local
+    Name:    myapp-cl1-lb
+  Route:
+    Labels:
+      Stack:  prod
+    Weight:   100
+```
+We see 100% of the traffic going to `prod` pods, labeled as "Stack: prod"
+Confirm RouteRule.
+```
+for i in `seq 1 10`; do curl $CLUSTER1_INGRESS_IP; done
+```
+_Output_
+```
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+myapp-prod-cl1-v1.0.0
+```
+Now send 100% of the traffic to the `canary` pod.
+```
+kubectl delete -f myapp-rr-100p.yaml
+kubectl apply -f myapp-rr-100c.yaml
+```
+Describe RouteRule.
+```
+kubectl describe routerules
+```
+_Output excerpt_
+```
+Spec:
+  Destination:
+    Domain:  svc.cluster.local
+    Name:    myapp-cl1-lb
+  Route:
+    Labels:
+      Stack:  canary
+    Weight:   100
+```
+And confirm.
+```
+for i in `seq 1 10`; do curl $CLUSTER1_INGRESS_IP; done
+```
+_Output_
+```
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+myapp-canary-cl1-v1.0.1
+```
+Lastly, lets send 95% of the traffic to `prod` and only 5% of the traffic to `canary`.
+```
+kubectl delete -f myapp-rr-100c.yaml
+kubectl apply -f myapp-rr-95p-5c.yaml
+```
+Describe RouteRule.
+```
+kubectl describe routerules
+```
+_Output excerpt_
+```
+Spec:
+  Destination:
+    Domain:  svc.cluster.local
+    Name:    myapp-cl1-lb
+  Route:
+    Labels:
+      Stack:  prod
+    Weight:   95
+    Labels:
+      Stack:  canary
+    Weight:   5
+```
+And confirm.
+```
+for i in `seq 1 50`; do curl $CLUSTER1_INGRESS_IP; done
+```
+You see only one or two requests hitting the `canary` pod, the rest are going to the `prod` pods.
