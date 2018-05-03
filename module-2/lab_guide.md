@@ -278,6 +278,8 @@ Click on **Pipeline** and click **Configure > Deploy** to inspect it.
 
 ![Spin Pipelines](diagrams/spin-pipelines.png)
 
+Details of **Deploy** pipeline below.
+
 ![Spin Deploy Pipeline](diagrams/spin-deploy-pipeline.png)
 
 The `Deploy` pipeline deploys canary to both clusters (`cluster-1` and `cluster-2`), it then tests the canaries.  There is a `manual judgement` stage prompting a user to proceed.  After the user hits continue, application is deployed to both clusters in production.
@@ -291,19 +293,29 @@ Click on individual stages in the `Deploy` pipeline to inspect them in detail.
 
 Run the pipeline manually from the GUI.  Clink on **Pipeline** link, and then the **Start Manual Execution** button.  
 
+![Spin Manual Deploy Pipeline](diagrams/spin-manual.png)
+
 Each rectangle represents a stage in the pipeline.  Click on various stages to get more details on steps being performed.
+
+![Spin Stage Details](diagrams/spin-manual-stage-details.png)
 
 Once at the manual judgement stage, pause!
 
 **DO NOT HIT CONTINUE YET!**
 
+![Spin Manual Judgement](diagrams/manual-judgement-continue.png)
+
 Click on **Clusters** to see `v1.0.0` pods deployed as canaries to both clusters.
+
+![Spin Manual Deploy Canary](diagrams/spin-v100-canary.png)
 
 You see one (1) pod (represented as a single rectangle) deployed in both clusters.  Green color represents healthy status.  You can also confirm this in the clusters using `kubectl` commands.
 
 Ensure both pods are exposed via Istio ingress in each cluster.
 
 Click on **Security Groups**.  Click on the application in both clusters and then **Status** dropdown from the right hand details box.
+
+![Spin Security Group Status](diagrams/spin-sg-status-ip.png)
 
 You see the ingress IP address for both cluster.
 
@@ -370,7 +382,11 @@ Return to the Spinnaker GUI and finish deploying the pipeline.
 
 Click on **Pipelines** and click **Continue** on the `manual judgement` phase.
 
+![Spin Finish Manual Deploy](diagrams/spin-manual-judgement-continue.png)
+
 After the pipeline completes, click on **Clusters**.  In addition to the single canary pod, you can see four (4) pods of `v1.0.0` running in production in both clusters.
+
+![Spin Manual Deploy Clusters](diagrams/spin-v100-prod-canary-clusters.png)
 
 You can now update the application by updating the version number from `v1.0.0` to `v1.0.1` in Container Registry.  This simulates application update and triggers the `Deploy` pipeline.
 ```
@@ -381,11 +397,17 @@ gcloud docker -- push gcr.io/$PROJECT/web-server:v1.0.1
 ```
 Click on **Pipelines** and refresh the page (if needed).  You see the pipeline being triggered.
 
+![Spin Trigger Deploy](diagrams/spin-pipeline-trigger.png)
+
 **STOP** at the manual judgement stage.
 
 **DO NOT HIT CONTINUE YET!**
 
+
+
 Click on **Clusters**.  You can see one canary pod of `v1.0.1` and four production pods of `v1.0.0` running in both clusters.
+
+![Spin Trigger Deploy Canary Prod](diagrams/spin-v101-canary-v100-prod.png)
 
 ## Traffic Management with Istio
 By default, traffic gets evenly split to all pods within a service.  The service has five (5) pods total.  One (1) pod is running the newer canary version `v1.0.1` and four (4) pods are running the production version `v1.0.0`.
