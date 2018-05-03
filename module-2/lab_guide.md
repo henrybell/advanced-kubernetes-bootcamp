@@ -217,7 +217,7 @@ kubectl port-forward --namespace default $DECK_POD 8080:9000 --context cluster-3
 ```
 Access the Spinnaker GUI using the Cloud Shell Preview
 
-You get the Spinnaker GUi with the following header
+You get the Spinnaker GUI with the following header
 
 Create an app in Spinnaker named `myapp`
 
