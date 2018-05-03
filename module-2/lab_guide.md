@@ -25,7 +25,7 @@ Set default zone.
 ```
 gcloud config set compute/zone us-west1-a
 ```
-Create 3 Kubernetes Engine clusters.  Cluster-3 needs to be 3 nodes with n1-standard-2 due to Spinnaker compute requirements.  Cluster-1 and cluster-2 run the applications.  Cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.
+Create three (3) Kubernetes Engine clusters.  Cluster-3 needs to be 3 nodes with `n1-standard-2` due to Spinnaker compute requirements.  Cluster-1 and cluster-2 run the applications.  Cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.
 ```
 gcloud container clusters create cluster-1 --async --num-nodes 2 --cluster-version=1.9.6-gke.1
 gcloud container clusters create cluster-2 --async --num-nodes 2 --cluster-version=1.9.6-gke.1
@@ -101,22 +101,22 @@ After tiller is installed, Install Istio via helm chart with sidecar injector as
 ```
 helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
 ```
-Activate sidecar injector for default namespace on both cluster-1 and cluster-2
+Activate sidecar injector for `default` namespace on both `cluster-1` and `cluster-2`
 ```
 kubectl label namespace default istio-injection=enabled --context cluster-1
 kubectl label namespace default istio-injection=enabled --context cluster-2
 ```
-Confirm _ISTIO-INJECTION_ is enabled on both cluster-1 and cluster-2
+Confirm _ISTIO-INJECTION_ is enabled on both `cluster-1` and `cluster-2`
 ```
 kubectl get namespace -L istio-injection --context cluster-1
 kubectl get namespace -L istio-injection --context cluster-2
 ```
 ## Install Spinnaker on cluster-3
-Switch to cluster-3 context
+Switch to `cluster-3` context
 ```
 kubectx cluster-3
 ```
-Create spinnaker service account and assign it storage admin role.
+Create Spinnaker service account and assign it `storage.admin` role.
 ```
 gcloud iam service-accounts create spinnaker-sa --display-name spinnaker-sa
 export SPINNAKER_SA_EMAIL=$(gcloud iam service-accounts list \
@@ -141,7 +141,7 @@ git clone https://github.com/viglesiasce/charts -b mcs
 cd charts/stable/spinnaker
 helm dep build
 ```
-Grant user `client` cluster admin role and create Client Certs for cluster-1 and cluster-2
+Grant user `client` cluster admin role and create `Client Certs` for `cluster-1` and `cluster-2`
 ```
 kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-1
 kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-2
@@ -206,22 +206,22 @@ cat spinnaker-config.yaml
 ```
 Install Spinnaker.  
 
-***This step could take up to 10 minutes (hence the timeout of 600 seconds below)***
+***This step could take up to 10 minutes (use timeout of 600 seconds)***
 ```
 helm install -n mc-taw . -f spinnaker-config.yaml --timeout 600
 ```
-Expose the DECK (Spinnaker GUI) pod.
+Expose the `DECK` (Spinnaker GUI) pod.
 ```
 export DECK_POD=$(kubectl get pods --namespace default -l "component=deck" -o jsonpath="{.items[0].metadata.name}" --context cluster-3) 
 kubectl port-forward --namespace default $DECK_POD 8080:9000 --context cluster-3 >> /dev/null &
 ```
 Access the Spinnaker GUI using the Cloud Shell Preview
 
-You get the Spinnaker GUI with the following header
+You get the Spinnaker GUI with the header as shown below
 
 Create an app in Spinnaker named `myapp`
 
-To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or Clusters) and Ingresss (or Security Groups) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
+To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or `Clusters`) and Ingresss (or `Security Groups`) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
 ```
 kubectx cluster-1
 kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl1-k8s
@@ -229,7 +229,7 @@ kubectx cluster-2
 kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl2-k8s
 ```
 ## Prepare Container Registry
-Pull a simple webserver to simulate an application.  We can use hightowerlabs `webserver` (which takes an arg for index.html explained a bit later in the workshop).  Also, pull `busyboxplus` to simulate canary testing during our pipeline deployment.
+Pull a simple webserver to simulate an application.  We can use hightowerlabs `webserver` (which takes an `arg` for index.html explained a bit later in the workshop).  Also, pull `busyboxplus` to simulate canary testing during our pipeline deployment.
 ```
 gcloud docker -- pull gcr.io/hightowerlabs/server:0.0.1
 gcloud docker -- pull radial/busyboxplus
@@ -269,14 +269,14 @@ sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- 
 Click on **Pipeline** and click **Configure > Deploy** to inspect it.
 
 
-The `Deploy` pipeline deploys canary to both clusters (`cluster-1` and `cluster-2`), it then tests the canaries.  There is a manual judgement stage prompting a user to proceed.  After the user hits proceed, application is deployed to both clusters in production.
+The `Deploy` pipeline deploys canary to both clusters (`cluster-1` and `cluster-2`), it then tests the canaries.  There is a `manual judgement` stage prompting a user to proceed.  After the user hits continue, application is deployed to both clusters in production.
 
-Click on individual stages in the pipeline to inspect them in detail.
+Click on individual stages in the `Deploy` pipeline to inspect them in detail.
 
-* In `Configuration` stage, we use version tag to trigger the pipeline.  Every time the version is changed on the image, the pipeline is automatically triggered.
+* In `Configuration` stage, we use `version tag` to trigger the pipeline.  Every time the version is changed on the image, the pipeline is automatically triggered.
 * `Deploy` stages are Kubernetes Deployments, with Services and Ingresses created in the previous section..
-* For Test stages, we do a simple `curl` to our web-server app and ensure liveness.
-* `Deploy to Production` is a manual judgement stage.
+* For `Test` stages, we do a simple `curl` to our web-server app and ensure liveness.
+* `Deploy to Production?` is a manual judgement stage.
 
 Run the pipeline manually from the GUI.  Clink on **Pipeline** link, and then the **Start Manual Execution** button.  
 
@@ -305,14 +305,14 @@ _Output_
 myapp-canary-cl1-v1.0.0
 ```
 ## Globally load balance client traffic to both clusters
-For this workshop, we use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io are few of the companies that provide this functionality.  
+For this workshop, we use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io all provide this functionality.  
 
-Store the ingress IP addresses for the two clusters in variables
+Store the Ingress IP addresses for the two clusters in variables
 ```
 export CLUSTER1_INGRESS_IP=$(kubectl get ingress myapp-cl1-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-1)
 export CLUSTER2_INGRESS_IP=$(kubectl get ingress myapp-cl2-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-2)
 ```
-We can use cluster-3 for global load balancing.  Create the NGINX configmap in cluster-3
+We can use `cluster-3` for global load balancing.  Create the NGINX ConfigMap in `cluster-3`
 ```
 kubectx cluster-3
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
@@ -331,7 +331,7 @@ Create the NGINX deployment and service
 kubectl apply -f nginx-dep.yaml
 kubectl apply -f nginx-svc.yaml
 ```
-Ensure that the `global-lb-nginx` Service has a public IP address.  You can run the following commands a few times or watch it using the `- w` option in the command line.
+Ensure that the `global-lb-nginx` Service has a public IP address.  You can run the following commands a few times or watch it using the `-w` option in the command line.
 ```
 kubectl get service global-lb-nginx
 ```
@@ -340,7 +340,7 @@ Once you have the public IP address, store it in a variable and do a for loop cu
 export GLB_IP=$(kubectl get service global-lb-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
-Traffic to the 2 canary pods is being split 50/50.  This ratio can be controlled by the `weight` field in the ConfigMap we generated earlier.
+Traffic to the two (2) canary pods is being split 50/50.  This ratio can be controlled by the `weight` field in the ConfigMap we generated earlier.
 
 Adjust the `weight` fields in the ConfigMap.  Apply the new configmap and deployment.
 ```
@@ -350,18 +350,18 @@ kubectl delete -f nginx-dep.yaml
 kubectl apply -f glb-configmap-2.yaml
 kubectl apply -f nginx-dep.yaml
 ```
-Do a for loop curl on the `GLB_IP` and you can see more traffic going to cluster-2.
+Do a for loop curl on the `GLB_IP` and you can see more traffic going to `cluster-2` due to higher `weight` (4 versus 1).
 ```
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
 ## Triggering application updates in Spinnaker
 Return to the Spinnaker GUI and finish deploying the pipeline.
 
-Click on **Pipelines** and click **Continue** on the manual judgement phase.
+Click on **Pipelines** and click **Continue** on the `manual judgement` phase.
 
-After the pipeline completes, click on **Clusters**.  In addition to the single canary pod, you can see 4 pods of `v1.0.0` running in production in both clusters.
+After the pipeline completes, click on **Clusters**.  In addition to the single canary pod, you can see four (4) pods of `v1.0.0` running in production in both clusters.
 
-You can now update the application by updating the version number from `v1.0.0` to `v1.0.1` in Container Registry.  This simulates application update and triggers the Deploy pipeline.
+You can now update the application by updating the version number from `v1.0.0` to `v1.0.1` in Container Registry.  This simulates application update and triggers the `Deploy` pipeline.
 ```
 gcloud docker -- pull gcr.io/$PROJECT/web-server:v1.0.0
 MYAPP_IMAGE_ID=$(docker images gcr.io/$PROJECT/web-server --format "{{.ID}}")
