@@ -441,6 +441,7 @@ We can use:
 
 Lets send 100% of the traffic to `prod` pods in `cluster-1`
 ```
+cd ~/advanced-kubernetes-bootcamp/module-2/lb
 kubectx cluster-1
 kubectl apply -f myapp-rr-100p.yaml
 ```
