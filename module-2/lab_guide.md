@@ -31,7 +31,7 @@ Set default zone.
 ```
 gcloud config set compute/zone us-west1-a
 ```
-Create three (3) Kubernetes Engine clusters.  Cluster-3 needs to be 3 nodes with `n1-standard-2` due to Spinnaker compute requirements.  Cluster-1 and cluster-2 run the applications.  Cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.
+Create three (3) Kubernetes Engine clusters.  Cluster-1 and cluster-2 run the applications.  Cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.  Cluster-3 needs to be 3 nodes with `n1-standard-2` due to Spinnaker compute requirements.
 ```
 gcloud container clusters create cluster-1 --async --cluster-version=1.9.6-gke.1
 gcloud container clusters create cluster-2 --async --cluster-version=1.9.6-gke.1
