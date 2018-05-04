@@ -134,6 +134,8 @@ kube-system    Active    7m
 ```
 
 ## Install Spinnaker on cluster-3
+> 20 mins
+
 Switch to `cluster-3` context
 ```
 kubectx cluster-3
