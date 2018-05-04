@@ -366,14 +366,14 @@ The output of `curl` has the form _appName-environment-cluster-version_.  The ab
 ## Globally load balance client traffic to both clusters
 > 10 mins
 
-For this workshop, we use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io all provide this functionality.  
+For this workshop, you use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io all provide this functionality.  
 
 Store the Ingress IP addresses for the two clusters in variables
 ```
 export CLUSTER1_INGRESS_IP=$(kubectl get ingress myapp-cl1-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-1)
 export CLUSTER2_INGRESS_IP=$(kubectl get ingress myapp-cl2-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-2)
 ```
-We can use `cluster-3` for global load balancing.  Create the NGINX ConfigMap in `cluster-3`
+Use `cluster-3` for global load balancing.  Create the NGINX ConfigMap in `cluster-3`
 ```
 kubectx cluster-3
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
