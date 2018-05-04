@@ -294,6 +294,8 @@ gcr.io/qwiklabs-gcp-28ba43f03d974ba6/busyboxplus
 gcr.io/qwiklabs-gcp-28ba43f03d974ba6/web-server
 ```
 ## Manually deploying Spinnaker pipelines
+> 20 mins
+
 Deploy pipeline via JSON
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/spinnaker
@@ -319,7 +321,7 @@ Click on individual stages in the `Deploy` pipeline to inspect them in detail.
 * For `Test` stages, we do a simple `curl` to our web-server app and ensure liveness.
 * `Deploy to Production?` is a manual judgement stage.
 
-Run the pipeline manually from the GUI.  Clink on **Pipeline** link, and then the **Start Manual Execution** button.  
+Run the pipeline manually from the GUI.  Clink on **Pipeline** link, and then the **Start Manual Execution** button.  Select the **Deploy** pipeline from the dropdown and **v1.0.0**.  
 
 <img src="diagrams/spin-manual.png">
 
