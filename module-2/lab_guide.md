@@ -257,7 +257,7 @@ Only provide app name `myapp` and email which can be arbitrary like `abc@xyz.com
 
 <img src="diagrams/spin-create-myapp.png" width="600">
 
-To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or `Clusters`) and Ingresss (or `Security Groups`) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
+To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or `Clusters`) and Ingresses (or `Security Groups`) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
 ```
 kubectx cluster-1
 kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl1-k8s
