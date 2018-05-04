@@ -232,7 +232,7 @@ Install Spinnaker.
 ```
 helm install -n mc-taw . -f spinnaker-config.yaml --timeout 600
 ```
-Expose the `DECK` (Spinnaker GUI) pod.
+Expose the `DECK` (Spinnaker frontend) pod.
 ```
 export DECK_POD=$(kubectl get pods --namespace default -l "component=deck" -o jsonpath="{.items[0].metadata.name}" --context cluster-3) 
 kubectl port-forward --namespace default $DECK_POD 8080:9000 --context cluster-3 >> /dev/null &
