@@ -1,11 +1,13 @@
 # Lab Guide
 Run this lab from Cloud Shell
 ## Repo
+> 1 min
 Get all files associated with this workshop by cloning the following repo.
 ```
 git clone https://github.com/henrybell/advanced-kubernetes-bootcamp.git
 ```
 ## Tools
+> 1 min
 Install kubectx/kubens
 ```
 mkdir bin
@@ -21,6 +23,7 @@ chmod 700 get_helm.sh
 ./get_helm.sh
 ```
 ## Install Kubernetes Engine Clusters
+> 5 mins
 Set default zone.
 ```
 gcloud config set compute/zone us-west1-a
@@ -60,6 +63,7 @@ cluster-3
 ```
 Current context is highlighted.
 ## Install Istio on all three clusters
+> 5 mins
 Download istio nightly build for 0.8 (*should be released by bootcamp*)
 ```
 mkdir istio8
