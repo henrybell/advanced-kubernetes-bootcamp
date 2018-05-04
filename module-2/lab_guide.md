@@ -263,6 +263,8 @@ kubectx cluster-2
 kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl2-k8s
 ```
 ## Prepare Container Registry
+> 5 mins
+
 Pull a simple webserver to simulate an application.  We can use hightowerlabs `webserver` (which takes an `arg` for index.html explained a bit later in the workshop).  Also, pull `busyboxplus` to simulate canary testing during our pipeline deployment.
 ```
 gcloud docker -- pull gcr.io/hightowerlabs/server:0.0.1
