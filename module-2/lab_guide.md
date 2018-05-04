@@ -361,7 +361,7 @@ _Output_
 ```
 myapp-canary-cl1-v1.0.0
 ```
-The output of `curl` has the form _appName-environment-cluster-version_.  The above output shows `myapp` application running as `canary` on `cluster-1` and the version is `v1.0.0`.  This is helpful when you have multiple versions running in multiple environments on multiple clusters.
+The output of `curl` has the form _appName-environment-cluster-version_.  The above output shows `myapp` application running as `canary` on `cluster-1` and the version is `v1.0.0`.  This is helpful when you have multiple versions running in multiple environments on multiple clusters.  This is done using an `arg` in the deployment YAML that is pushed to the index.html file.  (You can inspect this in the `Deploy` stages in the pipeline)
 
 ## Globally load balance client traffic to both clusters
 > 10 mins
