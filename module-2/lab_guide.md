@@ -294,7 +294,7 @@ gcr.io/qwiklabs-gcp-28ba43f03d974ba6/busyboxplus
 gcr.io/qwiklabs-gcp-28ba43f03d974ba6/web-server
 ```
 ## Manually deploying Spinnaker pipelines
-> 20 mins
+> 15 mins
 
 Deploy pipeline via JSON
 ```
@@ -359,6 +359,8 @@ _Output_
 myapp-canary-cl1-v1.0.0
 ```
 ## Globally load balance client traffic to both clusters
+> 10 mins
+
 For this workshop, we use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io all provide this functionality.  
 
 Store the Ingress IP addresses for the two clusters in variables
@@ -409,6 +411,8 @@ Do a for loop curl on the `GLB_IP` and you can see more traffic going to `cluste
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
 ## Triggering application updates in Spinnaker
+> 15 mins
+
 Return to the Spinnaker GUI and finish deploying the pipeline.
 
 Click on **Pipelines** and click **Continue** on the `manual judgement` phase.
@@ -439,6 +443,8 @@ Click on **Clusters**.  You can see one canary pod of `v1.0.1` and four producti
 <img src="diagrams/spin-v101-canary-v100-prod.png" width="600">
 
 ## Traffic Management with Istio
+> 15 mins
+
 By default, traffic gets evenly split to all pods within a service.  The service has five (5) pods total.  One (1) pod is running the newer canary version `v1.0.1` and four (4) pods are running the production version `v1.0.0`.
 
 Do a for loop curl on Ingress IP addresses for cluster-1 and cluster-2.
