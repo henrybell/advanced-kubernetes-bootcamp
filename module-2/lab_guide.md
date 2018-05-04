@@ -65,7 +65,7 @@ cluster-2
 cluster-3
 ```
 Current context is highlighted.
-## Install Istio on all three clusters
+## Install Istio on cluster-1 and cluster-2
 > 5 mins
 
 Download istio nightly build for 0.8 (*should be released by bootcamp*)
@@ -76,7 +76,7 @@ wget https://storage.googleapis.com/istio-prerelease/daily-build/release-0.8-201
 tar -xzvf istio-release-0.8-20180425-19-12-linux.tar.gz
 cd istio-release-0.8-20180425-19-12/
 ```
-Install Istio to all three clusters via helm
+Install Istio to `cluster-1` and `cluster-2` via helm
 
 _Cluster-1_
 ```
@@ -87,6 +87,8 @@ kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-adm
 helm init --service-account=tiller
 ```
 Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
+> Istio helm chart takes a couple of minutes to deploy
+
 ```
 helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
 ```
@@ -99,10 +101,12 @@ kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-adm
 helm init --service-account=tiller
 ```
 Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
+> Istio helm chart takes a couple of minutes to deploy
+
 ```
 helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
 ```
-_Cluster-3_
+Install `tiller` on `cluster-3` for Spinnaker installation in the next section.
 ```
 kubectx cluster-3
 kubectl create clusterrolebinding user-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
@@ -110,10 +114,7 @@ kubectl create serviceaccount tiller --namespace kube-system
 kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
 helm init --service-account=tiller
 ```
-Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
-```
-helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
-```
+
 Activate sidecar injector for `default` namespace on both `cluster-1` and `cluster-2`
 ```
 kubectl label namespace default istio-injection=enabled --context cluster-1
@@ -165,7 +166,7 @@ git clone https://github.com/viglesiasce/charts -b mcs
 cd charts/stable/spinnaker
 helm dep build
 ```
-Grant user `client` cluster admin role and create `Client Certs` for `cluster-1` and `cluster-2`
+Grant user `client` cluster admin role and create `Client Certs` for `cluster-1` and `cluster-2`.  Spinnaker uses Client Certs for authentication to Kubernetes clusters.
 ```
 kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-1
 kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-2
@@ -252,6 +253,7 @@ Create an app in Spinnaker named `myapp` by clicking on **Action** and **Create 
 <img src="diagrams/spin-action-create-app.png" width="200">
 
 Only provide app name `myapp` and email which can be arbitrary like `abc@xyz.com`.  Leave everything else blank or default.
+> Application must be named `myapp` 
 
 <img src="diagrams/spin-create-myapp.png" width="600">
 
@@ -265,7 +267,7 @@ kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl2-k8s
 ## Prepare Container Registry
 > 5 mins
 
-Pull a simple webserver to simulate an application.  We can use hightowerlabs `webserver` (which takes an `arg` for index.html explained a bit later in the workshop).  Also, pull `busyboxplus` to simulate canary testing during our pipeline deployment.
+For this workshop, you use a simple webserver to simulate an application.  You can use hightowerlabs `webserver` (which takes an `arg` for index.html explained a bit later in the workshop).  Also, use `busyboxplus` to simulate canary testing during the pipeline deployment.
 ```
 gcloud docker -- pull gcr.io/hightowerlabs/server:0.0.1
 gcloud docker -- pull radial/busyboxplus
@@ -316,12 +318,13 @@ The `Deploy` pipeline deploys canary to both clusters (`cluster-1` and `cluster-
 
 Click on individual stages in the `Deploy` pipeline to inspect them in detail.
 
-* In `Configuration` stage, we use `version tag` to trigger the pipeline.  Every time the version is changed on the image, the pipeline is automatically triggered.
+* In `Configuration` stage, you use `version tag` to trigger the pipeline.  Every time the version tag is changed on the image, the pipeline is automatically triggered.
 * `Deploy` stages are Kubernetes Deployments, with Services and Ingresses created in the previous section..
-* For `Test` stages, we do a simple `curl` to our web-server app and ensure liveness.
-* `Deploy to Production?` is a manual judgement stage.
+* For `Test` stages, you do a simple `curl` to the `myapp` web application and ensure liveness.
+* `Deploy to Production?` is a manual judgement stage prompting a human if its allowed to proceed.
+* After the manual judgement stage, `myapp` is deployed to production.
 
-Run the pipeline manually from the GUI.  Clink on **Pipeline** link, and then the **Start Manual Execution** button.  Select the **Deploy** pipeline from the dropdown and **v1.0.0**.  
+Run the pipeline manually from the GUI.  Clink on **Pipeline** link, and then the **Start Manual Execution** button.  Select the **Deploy** pipeline from the dropdown and version tag **v1.0.0**.  
 
 <img src="diagrams/spin-manual.png">
 
@@ -358,6 +361,8 @@ _Output_
 ```
 myapp-canary-cl1-v1.0.0
 ```
+The output of `curl` has the form _appName-environment-cluster-version_.  The above output shows `myapp` application running as `canary` on `cluster-1` and the version is `v1.0.0`.  This is helpful when you have multiple versions running in multiple environments on multiple clusters.
+
 ## Globally load balance client traffic to both clusters
 > 10 mins
 
@@ -396,9 +401,9 @@ Once you have the public IP address, store it in a variable and do a for loop cu
 export GLB_IP=$(kubectl get service global-lb-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
-Traffic to the two (2) canary pods is being split 50/50.  This ratio can be controlled by the `weight` field in the ConfigMap we generated earlier.
+Traffic to the two (2) canary pods is being split 50/50.  This ratio can be controlled by the `weight` field in the ConfigMap  generated earlier.  Recall that you set the `weight` fields for both clusters to `1`.
 
-Adjust the `weight` fields in the ConfigMap.  Apply the new configmap and deployment.
+Adjust the `weight` fields in the ConfigMap by changing the `weight` for `cluster-2` to `4`.  Set the `weight` for `cluster-1` to `1` (same as before).  Apply the new configmap and deployment.
 ```
 sed -e s/CLUSTER1_INGRESS_IP/$CLUSTER1_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$CLUSTER2_INGRESS_IP\ weight=4/g glb-configmap-var.yaml > glb-configmap-2.yaml
 kubectl delete -f glb-configmap.yaml
@@ -459,7 +464,7 @@ We can use:
 
 ### Controlling traffic to production and canary releases
 
-Lets send 100% of the traffic to `prod` pods in `cluster-1`
+Lets send 100% of the traffic to `prod` pods in `cluster-1`.  Istio uses `RouteRules` based on a match criteria and `weights` to route traffic to multiple deployments under one service.  Match criteria can be based on `labels` like `"stack": "canary"` or `"stack": "prod"`, or it can be based on HTTP Header info (for example, specific users or type of browsers etc).  For this workshop, you use `labels` to match traffic for `canary` and `prod` and `weights` to determine how much traffic to send for each deployment.
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
 kubectx cluster-1
@@ -480,7 +485,7 @@ Spec:
       Stack:  prod
     Weight:   100
 ```
-We see 100% of the traffic going to `prod` pods, labeled as "Stack: prod"
+We see 100% of the traffic going to `prod` pods, labeled as `"Stack": "prod"`
 Confirm RouteRule.
 ```
 for i in `seq 1 10`; do curl $CLUSTER1_INGRESS_IP; done
