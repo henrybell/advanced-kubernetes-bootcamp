@@ -24,7 +24,7 @@ curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_
 chmod 700 get_helm.sh
 ./get_helm.sh
 ```
-## Install Kubernetes Engine Clusters
+## Create Kubernetes Engine Clusters
 > 5 mins
 
 Set default zone.
