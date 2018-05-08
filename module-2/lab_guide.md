@@ -568,3 +568,75 @@ And confirm.
 for i in `seq 1 50`; do curl $CLUSTER1_INGRESS_IP; done
 ```
 You see only one or two requests hitting the `canary` pod, the rest are going to the `prod` pods.
+
+### Rate Limiting traffic to myapp service
+
+In Istio, Mixer is responsible for policy enforcement.  One of the policies is the ability to rate limit traffic to Kubernetes services.  Mixer applies and enforces these policies.
+Run a simple HTTP benchmark using the hey utility to get baseline performance in requests/secs.
+Install `hey`
+```
+go get -u github.com/rakyll/hey
+```
+Run a simple benchmark without Rate Limiting applied.  Use `cluster-1` for this example.  The following command runs the benchmark for 10 seconds (type `hey` to get a description of defaults).
+```
+hey -z 10s http://$CLUSTER1_INGRESS_IP
+```
+_Output excerpt_
+```
+Summary:
+  Total:        10.1821 secs
+  Slowest:      1.1752 secs
+  Fastest:      0.0017 secs
+  Average:      0.0525 secs
+  Requests/sec: 952.2630
+
+…
+
+Status code distribution:
+  [200] 9696 responses
+```
+Note the `Requests/sec` in the `Summary` section as well as the `Status code distribution`.  You are only receiving `Status 200` from the myapp service.
+Apply a Mixer Rate Limit rule to `cluster-1` and set the rate limit to 100 Requests/sec.
+```
+cd ~/advanced-kubernetes-bootcamp/module-2/lb
+kubectx cluster-1
+Kubectl apply -f rl100.yaml
+```
+Describe the `memquotas`.
+```
+kubectl describe memquotas
+```
+_Output excerpt_
+```
+Quotas:
+    Max Amount:  100
+    Name:        requestcount.quota.default
+    Overrides:
+      Dimensions:
+        Destination:   myapp-cl1-lb
+      Max Amount:      1
+      Valid Duration:  1s
+    Valid Duration:    1s
+```
+Note the `Max amount` of `100` with a `Valid Duration` of `1` second.
+Run the benchmark again.
+```
+hey -z 10s http://$CLUSTER1_INGRESS_IP
+```
+_Output excerpt_
+```
+Summary:
+  Total:        10.2650 secs
+  Slowest:      1.2749 secs
+  Fastest:      0.0010 secs
+  Average:      0.0470 secs
+  Requests/sec: 1063.2282
+
+…
+
+Status code distribution:
+  [200] 814 responses
+  [429] 10100 responses
+```
+The output of hey benchmark shows `Requests/sec` for the total number of responses.
+You can see two Status codes under `Status code distribution`. HTTP Status code `429` stands for `Too Many Requests` given the amount of time.   You can calculate the correct Requests/seconds by dividing the number of `OK` responses (represented by HTTP Status 200) by the amount of time the test was ran.  In this example, the test ran for 10 seconds with 814 [200] responses.  This results in the Requests/second of **81.4** which is close to the rate limit we set.
