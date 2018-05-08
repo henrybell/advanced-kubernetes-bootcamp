@@ -40,7 +40,7 @@
 
 +  Prepare Container Registry (5 mins)
     +  Push a simple `web-server` app to Container Registry with version tag `v1.0.0`
-    +  Push `busyboxplus` to COntainer registry to simulate canary testing
+    +  Push `busyboxplus` to Container registry to simulate canary testing
     
 +  Configure a **Deploy** pipeline in Spinnaker to deploy a web app to both clusters (5 mins)
 
