@@ -8,7 +8,7 @@
 
 ## Tools and Repo
 
-+  Clond Repo with workshop files
++  Clone Repo with workshop files
 +  Install following tools in Cloud Shell
     
     +  `Helm` for application management
