@@ -1,5 +1,12 @@
 # Module 3 - Observability
 
+## Prerequisites
+
+* A running Kubernetes Engine cluster
+* Stackdriver Kubernetes Monitoring enabled for that cluster
+* istio installed in the cluster
+* The [Sock Shop](https://microservices-demo.github.io/) application installed
+
 ## Monitoring & Alerting
 
 1. Create Stackdriver account
