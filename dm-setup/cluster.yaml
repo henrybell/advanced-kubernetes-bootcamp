@@ -13,14 +13,17 @@
 # limitations under the License.
 
 imports:
+- path: iam.jinja
 - path: cluster.jinja
 
 resources:
+- name: iam
+  type: iam.jinja
 - name: west
   type: cluster.jinja
   properties:
-    zone: us-west1-a
+    zone: us-west1-b
 - name: east
   type: cluster.jinja
   properties:
-    zone: us-east1-a
+    zone: us-east1-b
