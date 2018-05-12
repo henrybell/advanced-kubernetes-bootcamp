@@ -1,0 +1,9 @@
+steps:
+- name: 'gcr.io/cloud-builders/go'
+  args: ['install', './cmd/fileark']
+  env: ["PROJECT_ROOT=github.com/GoogleCloudPlatform/gke-fileark-go", "CGO_ENABLED=0", "GOOS=linux"]
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '--file', 'containers/Dockerfile.fileark', '--tag=gcr.io/$PROJECT_ID/fileark', '.']
+
+images:
+- 'gcr.io/$PROJECT_ID/fileark'
