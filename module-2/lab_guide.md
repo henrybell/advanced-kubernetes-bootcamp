@@ -602,7 +602,7 @@ Apply a Mixer Rate Limit rule to `cluster-1` and set the rate limit to 100 Reque
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
 kubectx cluster-1
-Kubectl apply -f rl100.yaml
+kubectl apply -f rl100.yaml
 ```
 Describe the `memquotas`.
 ```
