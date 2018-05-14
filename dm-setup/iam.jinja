@@ -31,6 +31,9 @@ resources:
     policy: $(ref.get-iam-policy-{{ env['deployment'] }})
     gcpIamPolicyPatch:
       add:
+      - role: roles/storage.objectViewer
+        members:
+        - serviceAccount:$(ref.{{ env['deployment'] }}-sa.email)
       - role: roles/logging.logWriter
         members:
         - serviceAccount:$(ref.{{ env['deployment'] }}-sa.email)

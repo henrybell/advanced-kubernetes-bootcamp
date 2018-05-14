@@ -182,7 +182,7 @@ Output should show `client-certificate-data` and `client-key-data` under the `us
 Create a secret from the `kubeconfig` file for Spinnaker
 ```
 kubectx cluster-3
-kubectl create secret generic --from-file=config=$HOME/.kube/config mc-taw-spinnaker-kubeconfig
+kubectl create secret generic --from-file=config=$HOME/.kube/config my-kubeconfig
 ```
 Create configuration for the Spinnaker config YAML.
 Define variables
@@ -200,6 +200,8 @@ cat > spinnaker-config.yaml <<EOF
 storageBucket: $BUCKET
 kubeConfig:
   enabled: true
+  secretName: my-kubeconfig
+  secretKey: config
   contexts:
   - $CL1_CONTEXT
   - $CL2_CONTEXT
