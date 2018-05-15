@@ -13,6 +13,7 @@
 # limitations under the License.
 
 imports:
+- path: student-vm.jinja
 - path: iam.jinja
 - path: cluster.jinja
 
@@ -23,7 +24,23 @@ resources:
   type: cluster.jinja
   properties:
     zone: us-west1-b
+    purpose: workloads
 - name: east
   type: cluster.jinja
   properties:
     zone: us-east1-b
+    purpose: workloads
+- name: spinnaker
+  type: cluster.jinja
+  properties:
+    zone: us-west1-b
+    purpose: spinnaker
+- name: student-vm
+  type: student-vm.jinja
+  metadata:
+    dependsOn:
+    - iam
+    - east
+    - west
+  properties:
+    zone: us-west1-b
