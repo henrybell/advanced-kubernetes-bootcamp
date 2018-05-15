@@ -2,14 +2,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq
+  name: user
   labels:
-    name: rabbitmq
+    name: user
   namespace: sock-shop
 spec:
   ports:
     # the port that this service should serve on
-  - port: 5672
-    targetPort: 5672
+  - port: 80
+    targetPort: 80
   selector:
-    name: rabbitmq
+    name: user
+

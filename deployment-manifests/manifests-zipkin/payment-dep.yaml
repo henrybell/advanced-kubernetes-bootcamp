@@ -2,34 +2,32 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: orders
+  name: payment
   labels:
-    name: orders
+    name: payment
   namespace: sock-shop
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: orders
+        name: payment
     spec:
       containers:
-      - name: orders
-        image: weaveworksdemos/orders:0.4.7
-        env:
-         - name: ZIPKIN
-           value: zipkin.zipkin.svc.cluster.local
-         - name: JAVA_OPTS
-           value: -Xms64m -Xmx128m -XX:PermSize=32m -XX:MaxPermSize=64m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom
+      - name: payment
+        image: weaveworksdemos/payment:0.4.3
         resources:
           limits:
-            cpu: 500m
-            memory: 500Mi
+            cpu: 100m
+            memory: 100Mi
           requests:
-            cpu: 200m
-            memory: 500Mi
+            cpu: 100m
+            memory: 100Mi
         ports:
         - containerPort: 80
+        env:
+        - name: ZIPKIN
+          value: http://zipkin.zipkin.svc.cluster.local:9411/api/v1/spans
         securityContext:
           runAsNonRoot: true
           runAsUser: 10001
@@ -39,9 +37,6 @@ spec:
             add:
               - NET_BIND_SERVICE
           readOnlyRootFilesystem: true
-        volumeMounts:
-        - mountPath: /tmp
-          name: tmp-volume
         livenessProbe:
           httpGet:
             path: /health
@@ -54,9 +49,5 @@ spec:
             port: 80
           initialDelaySeconds: 180
           periodSeconds: 3
-      volumes:
-        - name: tmp-volume
-          emptyDir:
-            medium: Memory
       nodeSelector:
         beta.kubernetes.io/os: linux
