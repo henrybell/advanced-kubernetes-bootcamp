@@ -1,5 +1,11 @@
 # Advanced Kubernetes Bootcamp Initial Setup
 
+## Quota
+
+* CPU
+  * us-west1 - 28
+  * us-east1 - 12
+
 ## IAM
 
 Ensure that the Deployment Manager Service Account
