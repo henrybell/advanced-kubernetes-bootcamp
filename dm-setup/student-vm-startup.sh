@@ -10,6 +10,9 @@ DEPLOYMENT_NAME=`metadata_value "instance/attributes/deployment"`
 apt-get update
 apt-get install -y git kubectl
 
+# Add Bash completion for gcloud
+echo 'source /usr/share/google-cloud-sdk/completion.bash.inc' >> /etc/profile
+
 export PATH=$PATH:/usr/local/go/bin
 export GOPATH=/root/go
 export HOME=/root
