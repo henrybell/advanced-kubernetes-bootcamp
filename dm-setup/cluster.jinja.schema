@@ -24,6 +24,10 @@ info:
 required:
 - zone
 
+imports:
+- name: student-vm-startup.sh
+  path: student-vm-startup.sh
+
 properties:
   zone:
     type: string

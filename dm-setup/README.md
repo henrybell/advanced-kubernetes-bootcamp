@@ -1,5 +1,11 @@
 # Advanced Kubernetes Bootcamp Initial Setup
 
+## Quota
+
+* CPU
+  * us-west1 - 28
+  * us-east1 - 12
+
 ## IAM
 
 Ensure that the Deployment Manager Service Account
@@ -16,4 +22,4 @@ the bootcamp resources (clusters, service accounts, etc):
 
 ## Create Deployment
 
-    gcloud deployment-manager deployments create --config cluster.yaml adv-bc-$(date +%s)
+    gcloud deployment-manager deployments create --config workshop.yaml adv-bc-$(date +%s)

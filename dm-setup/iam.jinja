@@ -12,11 +12,16 @@ limitations under the License.
 #}
 
 resources:
-- name: {{ env['deployment'] }}-sa
+- name: {{ env['deployment'] }}-cluster-sa
   type: iam.v1.serviceAccount
   properties:
-    accountId: {{ env['deployment'] }}-sa
+    accountId: {{ env['deployment'] }}-cluster-sa
     displayName: "Kubernetes cluster default service account"
+- name: {{ env['deployment'] }}-vm-sa
+  type: iam.v1.serviceAccount
+  properties:
+    accountId: {{ env['deployment'] }}-vm-sa
+    displayName: "Student VM default service account"
 - name: get-iam-policy-{{ env['deployment'] }}
   action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.getIamPolicy
   properties:
@@ -31,15 +36,18 @@ resources:
     policy: $(ref.get-iam-policy-{{ env['deployment'] }})
     gcpIamPolicyPatch:
       add:
+      - role: roles/owner
+        members:
+        - serviceAccount:$(ref.{{ env['deployment'] }}-vm-sa.email)
       - role: roles/storage.objectViewer
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-sa.email)
+        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
       - role: roles/logging.logWriter
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-sa.email)
+        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
       - role: roles/monitoring.metricWriter
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-sa.email)
+        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
       - role: roles/monitoring.viewer
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-sa.email)
+        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
