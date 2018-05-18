@@ -23,3 +23,10 @@ the bootcamp resources (clusters, service accounts, etc):
 ## Create Deployment
 
     gcloud deployment-manager deployments create --config workshop.yaml adv-bc-$(date +%s)
+
+## Recreating the deployment
+
+If you need to recreate the deployment (for development purposes) several times
+in the same project, you need to manually delete the service accounts created
+by the deployment after deleting it. Also delete the role bindings for those
+service accounts.

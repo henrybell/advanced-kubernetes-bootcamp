@@ -19,18 +19,32 @@ limitations under the License.
 
 resources:
 - name: {{ CLUSTER_NAME }}
-  type: container.v1.cluster
+  {% if properties["apiVersion"] == "v1beta1" %}
+  type: gcp-types/container-v1beta1:projects.locations.clusters
+  {% else %}
+  type: gcp-types/container-v1:projects.zones.clusters
+  {% endif %}
   properties:
-    zone: {{ properties['zone'] }}
+    {% if properties["apiVersion"] == "v1beta1" %}
+    parent: projects/{{ env["project"] }}/locations/{{ properties["location"] }}
+    {% else %}
+    zone: {{ properties["zone"] }}
+    {% endif %}
     cluster:
       name: {{ CLUSTER_NAME }}
       initialNodeCount: {{ properties['initialNodeCount'] }}
       initialClusterVersion: "{{ properties['kubernetesVersion'] }}"
+      {% if properties["monitoringService"] %}
+      monitoringService: {{ properties["monitoringService"] }}
+      {% endif %}
+      {% if properties["loggingService"] %}
+      loggingService: {{ properties["loggingService"] }}
+      {% endif %}
       masterAuth:
         username: ""
         password: ""
       legacyAbac:
-        # Needed for Spinnaker auth 
+        # Needed for Spinnaker auth
         enabled: true
       addonsConfig:
         kubernetesDashboard:
@@ -95,4 +109,3 @@ outputs:
 - name: clusterType{{ typeSuffix }}
   value: {{ TYPE_NAME }}{{ typeSuffix }}
 {% endfor %}
-
