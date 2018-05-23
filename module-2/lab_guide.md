@@ -1,58 +1,45 @@
 # Lab Guide
-Run this lab from Cloud Shell
+Run this lab from Cloud Shell.  The following instructions assumes you have already run the DM setup and have three Kubernetes Engine clusters installed.
+
 ## Repo
 > 1 min
 
-Get all files associated with this workshop by cloning the following repo.
+Get all files associated with this workshop by cloning the following repo.  If you have already done this you can skip this step.
 ```
 git clone https://github.com/henrybell/advanced-kubernetes-bootcamp.git
 ```
 ## Tools
 > 1 min
 
-Install kubectx/kubens
+Run the following bash script to install tools required for this workshop.
 ```
-mkdir bin
-export PATH=$PATH:~/bin/
-sudo git clone https://github.com/ahmetb/kubectx ~/kubectx
-sudo ln -s ~/kubectx/kubectx ~/bin/kubectx
-sudo ln -s ~/kubectx/kubens ~/bin/kubens
+. ~/advanced-kubernetes-bootcamp/module-2/tools/tools.sh
 ```
-Install helm
-```
-curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
-chmod 700 get_helm.sh
-./get_helm.sh
-```
-## Create Kubernetes Engine Clusters
+The following tools are installed:
+* kubectx/kubens
+* Helm
+* kube-ps1
+
+## Connect to the Kubernetes Engine Clusters
 > 5 mins
 
-Set default zone.
-```
-gcloud config set compute/zone us-west1-a
-```
-Create three (3) Kubernetes Engine clusters.  Cluster-1 and cluster-2 run the applications.  Cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.  Cluster-3 needs to be 3 nodes with `n1-standard-2` due to Spinnaker compute requirements.
-```
-gcloud container clusters create cluster-1 --async --cluster-version=1.9.6-gke.1
-gcloud container clusters create cluster-2 --async --cluster-version=1.9.6-gke.1
-gcloud container clusters create cluster-3 --async --machine-type=n1-standard-2 --cluster-version=1.9.6-gke.1
-```
-Clusters take 3-5 minutes to be deployed and ready.  Check the Cloud Console **Kubernetes Engine > Kubernetes clusters** page for status.
+You have three (3) Kubernetes Engine clusters in the project.  The suffix for the clusters are `-east`, `-west` and `-spinnaker`.  You use `-east` and `-west` clusters for applications, and the `-spinnaker` cluster for continuous delivery and global load balancing using NGINX load balancer.  
 
-<img src="diagrams/kube-clusters-status.png">
-
-
-After the clusters are Ready, create `kubeconfig` for all three clusters.
+Create `kubeconfig` for all three clusters.
 ```
-gcloud container clusters get-credentials cluster-1 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
-gcloud container clusters get-credentials cluster-2 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
-gcloud container clusters get-credentials cluster-3 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
+export GKE_EAST=$(gcloud container clusters list --zone us-east4-b --format='value(name)')
+export GKE_WEST=$(gcloud container clusters list --zone us-west1-c --format='value(name)')
+export GKE_SPINNAKER=$(gcloud container clusters list --zone us-west1-b --format='value(name)')
+export PROJECT=$(gcloud info --format='value(config.project)')
+gcloud container clusters get-credentials $GKE_SPINNAKER --zone us-west1-b --project $PROJECT
+gcloud container clusters get-credentials $GKE_EAST --zone us-east4-b --project $PROJECT
+gcloud container clusters get-credentials $GKE_WEST --zone us-west1-c --project $PROJECT
 ```
-Rename cluster context for easy switching.
+Rename cluster contexts for easy switching.
 ```
-kubectx cluster-1=gke_$(gcloud info --format='value(config.project)')_us-west1-a_cluster-1
-kubectx cluster-2=gke_$(gcloud info --format='value(config.project)')_us-west1-a_cluster-2
-kubectx cluster-3=gke_$(gcloud info --format='value(config.project)')_us-west1-a_cluster-3
+kubectx gke-spinnaker="gke_"$PROJECT"_us-west1-b_"$GKE_SPINNAKER
+kubectx gke-east="gke_"$PROJECT"_us-east4-b_"$GKE_EAST
+kubectx gke-west="gke_"$PROJECT"_us-west1-c_"$GKE_WEST
 ```
 Check new context names
 ```
@@ -60,72 +47,36 @@ kubectx
 ```
 _Output_
 ```
-cluster-1
-cluster-2
-cluster-3
+gke-east
+gke-spinnaker
+gke-west
 ```
 Current context is highlighted.
-## Install Istio on cluster-1 and cluster-2
+## Istio on gke-west and gke-east
 > 5 mins
 
-Download istio nightly build for 0.8 (*should be released by bootcamp*)
+Later in the lab, you use Istio for traffic management.  Ensure Istio is installed on `gke-west` and `gke-east` clusters.
 ```
-mkdir istio8
-cd istio8
-wget https://storage.googleapis.com/istio-prerelease/daily-build/release-0.8-20180425-19-12/istio-release-0.8-20180425-19-12-linux.tar.gz
-tar -xzvf istio-release-0.8-20180425-19-12-linux.tar.gz
-cd istio-release-0.8-20180425-19-12/
-```
-Install Istio to `cluster-1` and `cluster-2` via helm
-
-_Cluster-1_
-```
-kubectx cluster-1
-kubectl create clusterrolebinding user-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
-kubectl create serviceaccount tiller --namespace kube-system
-kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-```
-Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
-> Istio helm chart takes a couple of minutes to deploy
-
-```
-helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
-```
-_Cluster-2_
-```
-kubectx cluster-2
-kubectl create clusterrolebinding user-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
-kubectl create serviceaccount tiller --namespace kube-system
-kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-```
-Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
-> Istio helm chart takes a couple of minutes to deploy
-
-```
-helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
-```
-Install `tiller` on `cluster-3` for Spinnaker installation in the next section.
-```
-kubectx cluster-3
-kubectl create clusterrolebinding user-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
-kubectl create serviceaccount tiller --namespace kube-system
-kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-```
-
-Activate sidecar injector for `default` namespace on both `cluster-1` and `cluster-2`
-```
-kubectl label namespace default istio-injection=enabled --context cluster-1
-kubectl label namespace default istio-injection=enabled --context cluster-2
-```
-Confirm _ISTIO-INJECTION_ is enabled on both `cluster-1` and `cluster-2`
-```
-kubectl get namespace -L istio-injection --context cluster-1
-kubectl get namespace -L istio-injection --context cluster-2
+kubectl get deploy -n istio-system --context gke-west
+kubectl get deploy -n istio-system --context gke-east
 ```
 _Output_
+```
+NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+istio-citadel              1         1         1            1           44m
+istio-ingress              1         1         1            1           44m
+istio-pilot                1         1         1            1           44m
+istio-policy               1         1         1            1           44m
+istio-sidecar-injector     1         1         1            1           44m
+istio-statsd-prom-bridge   1         1         1            1           44m
+istio-telemetry            1         1         1            1           44m
+```
+Confirm _ISTIO-INJECTION_ is enabled on both `gke-west` and `gke-east`
+```
+kubectl get namespace -L istio-injection --context gke-west
+kubectl get namespace -L istio-injection --context gke-east
+```
+_Output excerpt_
 ```
 NAME           STATUS    AGE       ISTIO-INJECTION
 default        Active    7m        enabled
@@ -134,12 +85,27 @@ kube-public    Active    7m
 kube-system    Active    7m
 ```
 
-## Install Spinnaker on cluster-3
+## Spinnaker on gke-spinnaker
 > 20 mins
 
-Switch to `cluster-3` context
+You can use Spinnaker to continuously deploy applications to Kubernetes Engine clusters.  In this workshop, you use `gke-spinnaker` cluster, which has Spinnaker installed, to deploy applications on `gke-west` and `gke-east` clusters.  Ensure Spinnaker and all of its components are installed on `gke-spinnaker`.
 ```
-kubectx cluster-3
+kubectx gke-spinnaker
+kubectl get deployments
+```
+_Output_
+```
+NAME                           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+mc-taw-jenkins                 1         1         1            1           1h
+mc-taw-redis                   1         1         1            1           1h
+mc-taw-spinnaker-clouddriver   1         1         1            1           1h
+mc-taw-spinnaker-deck          1         1         1            1           1h
+mc-taw-spinnaker-echo          1         1         1            1           1h
+mc-taw-spinnaker-front50       1         1         1            1           1h
+mc-taw-spinnaker-gate          1         1         1            1           1h
+mc-taw-spinnaker-igor          1         1         1            1           1h
+mc-taw-spinnaker-orca          1         1         1            1           1h
+mc-taw-spinnaker-rosco         1         1         1            1           1h
 ```
 Create Spinnaker service account and assign it `storage.admin` role.
 ```
