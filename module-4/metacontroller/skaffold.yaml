@@ -1,0 +1,14 @@
+apiVersion: skaffold/v1alpha2
+kind: Config
+build:
+  artifacts:
+  - imageName: gcr.io/__GOOGLE_PROJECT__/securedeployment-controller
+deploy:
+  kubectl:
+    manifests:
+      - controller.yaml
+profiles:
+  - name: gcb
+    build:
+      googleCloudBuild:
+        projectId: __GOOGLE_PROJECT__
