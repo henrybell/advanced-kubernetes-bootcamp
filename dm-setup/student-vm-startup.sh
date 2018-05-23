@@ -62,6 +62,10 @@ cp kubectx/kube* /usr/local/bin
 wget -O prom-rbac.yml https://storage.googleapis.com/stackdriver-prometheus-documentation/rbac-setup.yml
 wget https://storage.googleapis.com/stackdriver-prometheus-documentation/prometheus-service.yml
 
+# Download Sock Shop App
+curl --retry 5 -sfH "Metadata-Flavor: Google" \
+     "http://metadata/computeMetadata/v1/instance/attributes/sock-shop" > sock-shop.yaml
+
 WORKLOAD_FILTER="resourceLabels.purpose=workloads AND resourceLabels.deployment=${DEPLOYMENT_NAME}"
 WORKLOAD_CLUSTERS=$(gcloud container clusters list --format 'csv[no-heading](name,zone)' --filter="${WORKLOAD_FILTER}")
 for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
@@ -99,6 +103,17 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     helm install -n istio --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
     popd
     kubectl label namespace default istio-injection=enabled
+done
+
+SOCKSHOP_FILTER="resourceLabels.purpose=workloads AND resourceLabels.deployment=${DEPLOYMENT_NAME} AND resourceLabels.sock-shop=installed"
+SOCKSHOP_CLUSTERS=$(gcloud container clusters list --format 'csv[no-heading](name,zone)' --filter="${SOCKSHOP_FILTER}")
+for CLUSTER_INFO in ${SOCKSHOP_CLUSTERS}; do
+    CLUSTER_INFO_ARRAY=(${CLUSTER_INFO//,/ })
+    # Wait until cluster is running
+    until gcloud container clusters describe ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]} --format 'value(status)' | grep -m 1 "RUNNING"; do sleep 10 ; done
+    gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+
+    kubectl apply -f sock-shop.yaml
 done
 
 # Configure Spinnaker
