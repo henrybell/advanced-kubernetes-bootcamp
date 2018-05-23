@@ -44,3 +44,6 @@ resources:
         - key: startup-script
           value: |
             {{ imports['student-vm-startup.sh'] | indent(12) }}
+        - key: sock-shop
+          value: |
+            {{ imports['complete-demo.yaml'] | indent(12) }}

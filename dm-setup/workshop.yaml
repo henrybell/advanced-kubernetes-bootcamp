@@ -23,13 +23,22 @@ resources:
 - name: west
   type: cluster.jinja
   properties:
-    zone: us-west1-b
+    location: us-west1-c
     purpose: workloads
+    apiVersion: v1beta1
+    kubernetesVersion: "1.10"
+    monitoringService: monitoring.googleapis.com/kubernetes
+    loggingService: logging.googleapis.com/kubernetes
+    sockShop: "installed"
 - name: east
   type: cluster.jinja
   properties:
-    zone: us-east1-b
+    location: us-east4-b
     purpose: workloads
+    apiVersion: v1beta1
+    kubernetesVersion: "1.10"
+    monitoringService: monitoring.googleapis.com/kubernetes
+    loggingService: logging.googleapis.com/kubernetes
 - name: spinnaker
   type: cluster.jinja
   properties:
