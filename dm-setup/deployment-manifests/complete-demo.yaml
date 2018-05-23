@@ -308,7 +308,7 @@ spec:
     spec:
       containers:
       - name: front-end
-        image: gcr.io/stackdriver-microservices-demo/front-end
+        image: gcr.io/stackdriver-microservices-demo/front-end@sha256:0c072d05e76f03280aaa6e7488aba3d59e38d91527f2884c1099857ee902bf9f
         resources:
           requests:
             cpu: 100m
