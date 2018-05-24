@@ -10,7 +10,7 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_GCP_ZONE_GKE_WEST",
+          "account": "gke_PROJECT_ZONE_WEST_GKE_WEST",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
@@ -94,7 +94,7 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_GCP_ZONE_GKE_EAST",
+          "account": "gke_PROJECT_ZONE_EAST_GKE_EAST",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
@@ -176,7 +176,7 @@
       "type": "deploy"
     },
     {
-      "account": "gke_PROJECT_GCP_ZONE_GKE_WEST",
+      "account": "gke_PROJECT_ZONE_WEST_GKE_WEST",
       "annotations": {
         "sidecar.istio.io/inject": "false"
       },
@@ -224,7 +224,7 @@
       "type": "runJob"
     },
     {
-      "account": "gke_PROJECT_GCP_ZONE_GKE_EAST",
+      "account": "gke_PROJECT_ZONE_EAST_GKE_EAST",
       "annotations": {
         "sidecar.istio.io/inject": "false"
       },
@@ -287,7 +287,7 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_GCP_ZONE_GKE_WEST",
+          "account": "gke_PROJECT_ZONE_WEST_GKE_WEST",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
@@ -373,7 +373,7 @@
     {
       "clusters": [
         {
-          "account": "gke_PROJECT_GCP_ZONE_GKE_EAST",
+          "account": "gke_PROJECT_ZONE_EAST_GKE_EAST",
           "application": "myapp",
           "cloudProvider": "kubernetes",
           "containers": [
