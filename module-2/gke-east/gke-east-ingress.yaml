@@ -4,9 +4,9 @@ kind: "Ingress"
 metadata:
   annotations:
     kubernetes.io/ingress.class: "istio"
-  name: "myapp-cl2-ingress"
+  name: "myapp-gke-east-ingress"
   namespace: "default"
 spec:
   backend:
-    serviceName: "myapp-cl2-lb"
+    serviceName: "myapp-gke-east-lb"
     servicePort: 80
