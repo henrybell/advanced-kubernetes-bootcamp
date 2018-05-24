@@ -96,7 +96,7 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     sleep 60
 
     # Install Istio
-    ISTIO_VERSION=0.8-20180425-19-12
+    ISTIO_VERSION=0.8-20180523-09-15
     wget https://storage.googleapis.com/istio-prerelease/daily-build/release-${ISTIO_VERSION}/istio-release-${ISTIO_VERSION}-linux.tar.gz
     tar -xzvf istio-release-${ISTIO_VERSION}-linux.tar.gz
     pushd istio-release-${ISTIO_VERSION}/
