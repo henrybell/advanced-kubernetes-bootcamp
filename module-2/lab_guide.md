@@ -107,106 +107,10 @@ mc-taw-spinnaker-igor          1         1         1            1           1h
 mc-taw-spinnaker-orca          1         1         1            1           1h
 mc-taw-spinnaker-rosco         1         1         1            1           1h
 ```
-Create Spinnaker service account and assign it `storage.admin` role.
-```
-gcloud iam service-accounts create spinnaker-sa --display-name spinnaker-sa
-export SPINNAKER_SA_EMAIL=$(gcloud iam service-accounts list \
-    --filter="displayName:spinnaker-sa" \
-    --format='value(email)')
-export PROJECT=$(gcloud info --format='value(config.project)')
-gcloud projects add-iam-policy-binding $PROJECT --role roles/storage.admin --member serviceAccount:$SPINNAKER_SA_EMAIL
-```
-Create the service account key
-```
-cd ~/advanced-kubernetes-bootcamp/module-2
-gcloud iam service-accounts keys create spinnaker-key.json --iam-account $SPINNAKER_SA_EMAIL
-```
-Create a Cloud Storage bucket for Spinnaker
-```
-export BUCKET=$PROJECT-spinnaker-conf
-gsutil mb -c regional -l us-west1 gs://$BUCKET
-```
-Clone the Spinnaker git repo and build
-```
-git clone https://github.com/viglesiasce/charts -b mcs
-cd charts/stable/spinnaker
-helm dep build
-```
-Grant user `client` cluster admin role and create `Client Certs` for `cluster-1` and `cluster-2`.  Spinnaker uses Client Certs for authentication to Kubernetes clusters.
-```
-kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-1
-kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-2
-CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True gcloud container clusters get-credentials cluster-1 --zone us-west1-a
-CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True gcloud container clusters get-credentials cluster-2 --zone us-west1-a
-```
-Ensure that client certs are present in the kubeconfig file
-```
-cat ~/.kube/config
-```
-Output should show `client-certificate-data` and `client-key-data` under the `user` stanza for `cluster-1` and `cluster-2` contexts.
-
-Create a secret from the `kubeconfig` file for Spinnaker
-```
-kubectx cluster-3
-kubectl create secret generic --from-file=config=$HOME/.kube/config my-kubeconfig
-```
-Create configuration for the Spinnaker config YAML.
-Define variables
-```
-cd ~/advanced-kubernetes-bootcamp/module-2
-export SA_JSON=$(cat spinnaker-key.json)
-export BUCKET=$PROJECT-spinnaker-conf
-export CL1_CONTEXT="gke_"$PROJECT"_us-west1-a_cluster-1"
-export CL2_CONTEXT="gke_"$PROJECT"_us-west1-a_cluster-2"
-```
-Create the config file
-```
-cd charts/stable/spinnaker
-cat > spinnaker-config.yaml <<EOF
-storageBucket: $BUCKET
-kubeConfig:
-  enabled: true
-  secretName: my-kubeconfig
-  secretKey: config
-  contexts:
-  - $CL1_CONTEXT
-  - $CL2_CONTEXT
-gcs:
-  enabled: true
-  project: $PROJECT
-  jsonKey: '$SA_JSON'
-
-
-
-# Disable minio the default
-minio:
-  enabled: false
-
-
-
-# Configure your Docker registries here
-accounts:
-- name: gcr
-  address: https://gcr.io
-  username: _json_key
-  password: '$SA_JSON'
-  email: 1234@5678.com 
-EOF
-```
-Ensure the file has the correct values for the `SA_JSON` and `BUCKET` variables.
-```
-cat spinnaker-config.yaml
-```
-Install Spinnaker.  
-
-***This step could take up to 10 minutes (use timeout of 600 seconds)***
-```
-helm install -n mc-taw . -f spinnaker-config.yaml --timeout 600
-```
 Expose the `DECK` (Spinnaker frontend) pod.
 ```
-export DECK_POD=$(kubectl get pods --namespace default -l "component=deck" -o jsonpath="{.items[0].metadata.name}" --context cluster-3) 
-kubectl port-forward --namespace default $DECK_POD 8080:9000 --context cluster-3 >> /dev/null &
+export DECK_POD=$(kubectl get pods --namespace default -l "component=deck" -o jsonpath="{.items[0].metadata.name}") 
+kubectl port-forward --namespace default $DECK_POD 8080:9000 >> /dev/null &
 ```
 Access the Spinnaker GUI using the Cloud Shell Preview
 
@@ -227,10 +131,10 @@ Only provide app name `myapp` and email which can be arbitrary like `abc@xyz.com
 
 To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or `Clusters`) and Ingresses (or `Security Groups`) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
 ```
-kubectx cluster-1
-kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl1-k8s
-kubectx cluster-2
-kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl2-k8s
+kubectx gke-west
+kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/gke-west
+kubectx gke-east
+kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/gke-east
 ```
 ## Prepare Container Registry
 > 5 mins
@@ -269,8 +173,9 @@ gcr.io/qwiklabs-gcp-28ba43f03d974ba6/web-server
 Deploy pipeline via JSON
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/spinnaker
-export GCP_ZONE=us-west1-a
-sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- -X \
+export ZONE_WEST=us-west1-c
+export ZONE_EAST=us-east4-b
+sed -e s/PROJECT/$PROJECT/g -e s/ZONE_WEST/$ZONE_WEST/g -e s/ZONE_EAST/$ZONE_EAST/g -e s/GKE_WEST/$GKE_WEST/g -e s/GKE_EAST/$GKE_EAST/g pipeline.json | curl -d@- -X \
     POST --header "Content-Type: application/json" --header \
     "Accept: /" http://localhost:8080/gate/pipelines
 ```
