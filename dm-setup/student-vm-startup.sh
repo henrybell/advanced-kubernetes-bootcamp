@@ -156,8 +156,8 @@ kubeConfig:
   secretName: my-kubeconfig
   secretKey: config
   contexts:
-  - gke_${PROJECT}_us-west1-b_${DEPLOYMENT_NAME}-west
-  - gke_${PROJECT}_us-east1-b_${DEPLOYMENT_NAME}-east
+  - gke_${PROJECT}_us-west1-c_${DEPLOYMENT_NAME}-west
+  - gke_${PROJECT}_us-east4-b_${DEPLOYMENT_NAME}-east
 gcs:
   enabled: true
   project: ${PROJECT}
@@ -175,5 +175,5 @@ accounts:
   password: '${SA_JSON}'
   email: 1234@5678.com
 EOF
-    helm install -n mc-taw charts/stable/spinnaker -f spinnaker-config.yaml --timeout 600
+    helm install -n adv-k8s charts/stable/spinnaker -f spinnaker-config.yaml --timeout 600
 done
