@@ -57,6 +57,3 @@ resources:
       - role: roles/errorreporting.writer
         members:
         - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
-      - role: roles/clouddebugger.agent
-        members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
