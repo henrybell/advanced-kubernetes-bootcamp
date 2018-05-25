@@ -487,7 +487,7 @@ Quotas:
     Name:        requestcount.quota.default
     Overrides:
       Dimensions:
-        Destination:   myapp-cl1-lb
+        Destination:   myapp-gke-west-lb
       Max Amount:      1
       Valid Duration:  1s
     Valid Duration:    1s
@@ -495,7 +495,7 @@ Quotas:
 Note the `Max amount` of `100` with a `Valid Duration` of `1` second.
 Run the benchmark again.
 ```
-hey -z 10s http://$CLUSTER1_INGRESS_IP
+hey -z 10s http://$GKE_WEST_INGRESS_IP
 ```
 _Output excerpt_
 ```
