@@ -30,6 +30,51 @@ spec:
       webhook:
         url: http://securedeployment-controller.metacontroller/
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: securedeployment-controller
+  namespace: metacontroller
+data:
+  app.py: |-
+    from flask import Flask, jsonify, request
+    import copy
+    import os
+    import re
+    
+    app = Flask(__name__)
+    
+    @app.route('/', methods=['GET', 'POST'])
+    def sync():
+        if request.method == 'GET': return "OK"
+    
+        desired_status = {"passed": [], "failed": []}
+        req = request.get_json()
+        desired_deploys = req["children"].get("Deployment.apps/v1")
+    
+        ### Begin security scan code ###
+    
+        RE_IMAGE_PATTERN = re.compile(os.environ["IMAGE_PATTERN"])
+    
+        for container in req["parent"]["spec"]["template"]["spec"]["containers"]:
+            if re.match(RE_IMAGE_PATTERN, container["image"]):
+                desired_status["passed"].append("%s: %s" % (container["name"], container["image"]))
+    
+                deploy = copy.deepcopy(req["parent"])
+                deploy.update({"apiVersion": "apps/v1", "kind": "Deployment"})
+                deploy["metadata"].update({"resourceVersion": None})
+                desired_deploys["Deployment.apps/v1"] = deploy
+            else:
+                desired_status["failed"].append("%s: %s" % (container["name"], container["image"]))
+    
+        ### End security scan code ###
+    
+        return jsonify({'status': desired_status, 'children': desired_deploys.values()})
+    
+    if __name__ == '__main__':
+        port = int(os.environ.get("APP_PORT","80"))
+        app.run(host='0.0.0.0', port=port, debug=True)
+---
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
@@ -51,7 +96,14 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
       - name: controller
-        image: gcr.io/__GOOGLE_PROJECT__/securedeployment-controller
+        image: jazzdd/alpine-flask:latest
+        args: ["-d"]
+        env:
+        - name: IMAGE_PATTERN
+          value: "gcr.io/stackdriver-microservices-demo/.*"
+        volumeMounts:
+        - name: app
+          mountPath: /app
         ports:
         - containerPort: 80
         readinessProbe:
@@ -60,6 +112,10 @@ spec:
             port: 80
           initialDelaySeconds: 5
           periodSeconds: 5
+      volumes:
+      - name: app
+        configMap:
+          name: securedeployment-controller
 ---
 apiVersion: v1
 kind: Service

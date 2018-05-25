@@ -30,8 +30,6 @@ output {
   stdout { codec => json_lines }
   elasticsearch {
   "hosts" => "'${ES_ADDR}'"
-  "ssl" => true
-  "ssl_certificate_verification" => false
   "index" => "socks"
   "document_type" => "sock"
   }

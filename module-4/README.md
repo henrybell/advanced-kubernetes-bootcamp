@@ -9,7 +9,15 @@
 * istio installed in the cluster
 * The [Sock Shop](https://microservices-demo.github.io/) application installed
 
+Change to the `module-4` directory:
+
+```
+cd module-4
+```
+
 ## Install Elasticsearch Operator
+
+In this section you create an Elasticsearch cluster with Cerebro and Kibana. Snapshots are also configured automatically by the operator to save indices to GCS. 
 
 Configure kubectl for the us-west cluster:
 
@@ -36,7 +44,7 @@ kubectl create ns elasticsearch
 Add bucket permissions to cluster service account:
 
 ```
-SA_EMAIL=$(kubectl -n elasticsearch run shell --rm --restart=Never -it --image google/cloud-sdk --command /usr/bin/curl -- -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email)
+SA_EMAIL=$(kubectl -n elasticsearch run shell --rm --restart=Never -it --image google/cloud-sdk:alpine --command /usr/bin/curl -- -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email)
 
 PROJECT=$(gcloud config get-value project)
 
@@ -67,6 +75,12 @@ Check the properties of the Custom Resource:
 
 ```
 kubectl -n elasticsearch describe elasticsearchcluster example-es-cluster
+```
+
+Verify all Elasticsearch pods are up and running:
+
+```
+kubectl -n elasticsearch get pods
 ```
 
 ## Ingest data from the Sock Shop
@@ -141,7 +155,7 @@ Browse the ingested data from the `Discover` view on the left hand side.
 
 TBD: Waiting on https://github.com/upmc-enterprises/elasticsearch-operator/issues/17
 
-## Delete the cluster
+## Delete the Elasticsearch cluster
 
 ```
 kubectl -n elasticsearch delete elasticsearchcluster example-es-cluster
@@ -157,8 +171,8 @@ This controller uses the [CompositeController interface from metacontroller](htt
 ## Install the metacontroller:
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/metacontroller/master/manifests/metacontroller-rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/metacontroller/master/manifests/metacontroller.yaml
+kubectl apply -f metacontroller/metacontroller-rbac.yaml
+kubectl apply -f metacontroller/metacontroller.yaml
 ```
 
 Verify that the Metacontroller is installed in the `metacontroller` namespace:
@@ -169,25 +183,11 @@ kubectl -n metacontroller get pods
 
 ## Deploy the Secure Deployments Controller
 
-Install Skaffold:
-
-```
-curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && chmod +x skaffold && sudo mv skaffold /usr/local/bin
-```
-
-Update manifests with your project info:
-
-```
-cd metacontroller
-
-export GOOGLE_PROJECT=$(gcloud config get-value project)
-sed -i.old "s/__GOOGLE_PROJECT__/${GOOGLE_PROJECT}/g" controller.yaml secure-deployment.yaml
-```
 
 Deploy the custom secure deployment controller:
 
 ```
-skaffold run
+kubectl apply -f metacontroller/controller.yaml
 ```
 
 > This is a complete operator in less than 50 lines of Python!
@@ -200,8 +200,16 @@ kubectl -n metacontroller get pods -l app=securedeployment-controller
 
 ## Create the Custom Resource
 
+First, delete the default `catalogue-db` deployment for the Sock Shop:
+
 ```
-kubectl apply -f secure-deployment.yaml
+kubectl -n sock-shop delete deploy catalogue-db
+```
+
+Create the custom `SecureDeployment` resource for the `catalogue-db` deployment:
+
+```
+kubectl apply -f metacontroller/secure-deployment.yaml
 ```
 
 Inspect the custom resource and verify that the checks passed:
@@ -230,8 +238,8 @@ kubectl -n sock-shop get deploy catalogue-db
 Rename the image used in the deployment:
 
 ```
-sed -i.old 's|image: gcr.io/stackdriver-microservices-demo/catalogue-db|image: docker.io/weaveworksdemos/catalogue-db|g' secure-deployment.yaml
-kubectl apply -f secure-deployment.yaml
+sed -i.old 's|image: gcr.io/stackdriver-microservices-demo/catalogue-db|image: docker.io/weaveworksdemos/catalogue-db|g' metacontroller/secure-deployment.yaml
+kubectl apply -f metacontroller/secure-deployment.yaml
 ```
 
 Check the status of the secure deployment:
@@ -249,46 +257,4 @@ Status:
   Passed:
 ```
 
-> Note: The check failed, so the deployment was not updated.
-
-## Update the controller
-
-Change the controller so that it accepts the new image pattern:
-
-```
-sed -i.old 's|gcr.io/stackdriver-microservices-demo|docker.io/weaveworksdemos|g' app.py
-```
-
-Redeploy the controller:
-
-```
-skaffold run
-```
-
-Recreate the secure deployment:
-
-```
-kubectl -n sock-shop delete securedeploy catalogue-db
-kubectl apply -f secure-deployment.yaml
-```
-
-Verify that the image check passed:
-
-```
-kubectl -n sock-shop describe securedeploy catalogue-db
-```
-
-Expected output:
-
-```yaml
-Status:
-  Failed:
-  Passed:
-    catalogue-db: docker.io/weaveworksdemos/catalogue-db
-```
-
-Verify the `catalogue-db` pod is now using the new image:
-
-```
-kubectl -n sock-shop get pod -l name=catalogue-db -o jsonpath='{.items[].spec.containers[].image}'
-```
+> Note: The check failed, so the catalogue-db deployment was not updated.
