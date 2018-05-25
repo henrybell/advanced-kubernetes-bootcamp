@@ -232,25 +232,25 @@ curl 35.185.215.157
 ```
 _Output_
 ```
-myapp-canary-cl1-v1.0.0
+myapp-canary-gke-west-v1.0.0
 ```
-The output of `curl` has the form _appName-environment-cluster-version_.  The above output shows `myapp` application running as `canary` on `cluster-1` and the version is `v1.0.0`.  This is helpful when you have multiple versions running in multiple environments on multiple clusters.  This is done using an `arg` in the deployment YAML that is pushed to the index.html file.  (You can inspect this in the `Deploy` stages in the pipeline)
+The output of `curl` has the form _appName-environment-cluster-version_.  The above output shows `myapp` application running as `canary` on `gke-west` and the version is `v1.0.0`.  This is helpful when you have multiple versions running in multiple environments on multiple clusters.  This is done using an `arg` in the deployment YAML that is pushed to the index.html file.  (You can inspect this in the `Deploy` stages in the pipeline)
 
-## Globally load balance client traffic to both clusters
+## Globally load balance client traffic to gke-west and gke-east clusters
 > 10 mins
 
 For this workshop, you use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io all provide this functionality.  
 
 Store the Ingress IP addresses for the two clusters in variables
 ```
-export CLUSTER1_INGRESS_IP=$(kubectl get ingress myapp-cl1-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-1)
-export CLUSTER2_INGRESS_IP=$(kubectl get ingress myapp-cl2-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-2)
+export GKE_WEST_INGRESS_IP=$(kubectl get ingress myapp-gke-west-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context gke-west)
+export GKE_EAST_INGRESS_IP=$(kubectl get ingress myapp-gke-east-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context gke-east)
 ```
-Use `cluster-3` for global load balancing.  Create the NGINX ConfigMap in `cluster-3`
+Use `gke-spinnaker` for global load balancing.  Create the NGINX ConfigMap in `gke-spinnaker`
 ```
-kubectx cluster-3
+kubectx gke-spinnaker
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
-sed -e s/CLUSTER1_INGRESS_IP/$CLUSTER1_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$CLUSTER2_INGRESS_IP\ weight=1/g glb-configmap-var.yaml > glb-configmap.yaml
+sed -e s/CLUSTER1_INGRESS_IP/$GKE_WEST_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$GKE_EAST_INGRESS_IP\ weight=1/g glb-configmap-var.yaml > glb-configmap.yaml
 ```
 Confirm that the Ingress IP addresses are in the output file.
 ```
@@ -276,15 +276,15 @@ for i in `seq 1 20`; do curl $GLB_IP; done
 ```
 Traffic to the two (2) canary pods is being split 50/50.  This ratio can be controlled by the `weight` field in the ConfigMap  generated earlier.  Recall that you set the `weight` fields for both clusters to `1`.
 
-Adjust the `weight` fields in the ConfigMap by changing the `weight` for `cluster-2` to `4`.  Set the `weight` for `cluster-1` to `1` (same as before).  Apply the new configmap and deployment.
+Adjust the `weight` fields in the ConfigMap by changing the `weight` for `gke-east` to `4`.  Set the `weight` for `gke-west` to `1` (same as before).  Apply the new configmap and deployment.
 ```
-sed -e s/CLUSTER1_INGRESS_IP/$CLUSTER1_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$CLUSTER2_INGRESS_IP\ weight=4/g glb-configmap-var.yaml > glb-configmap-2.yaml
+sed -e s/CLUSTER1_INGRESS_IP/$GKE_WEST_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$GKE_EAST_INGRESS_IP\ weight=4/g glb-configmap-var.yaml > glb-configmap-2.yaml
 kubectl delete -f glb-configmap.yaml
 kubectl delete -f nginx-dep.yaml
 kubectl apply -f glb-configmap-2.yaml
 kubectl apply -f nginx-dep.yaml
 ```
-Do a for loop curl on the `GLB_IP` and you can see more traffic going to `cluster-2` due to higher `weight` (4 versus 1).
+Do a for loop curl on the `GLB_IP` and you can see more traffic going to `gke-east` due to higher `weight` (4 versus 1).
 ```
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
