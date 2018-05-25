@@ -51,3 +51,9 @@ resources:
       - role: roles/monitoring.viewer
         members:
         - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+      - role: roles/cloudtrace.agent
+        members:
+        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+      - role: roles/errorreporting.writer
+        members:
+        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
