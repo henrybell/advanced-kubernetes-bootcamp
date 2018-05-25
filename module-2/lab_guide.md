@@ -327,8 +327,8 @@ By default, traffic gets evenly split to all pods within a service.  The service
 
 Do a for loop curl on Ingress IP addresses for cluster-1 and cluster-2.
 ```
-for i in `seq 1 20`; do curl $CLUSTER1_INGRESS_IP; done
-for i in `seq 1 20`; do curl $CLUSTER2_INGRESS_IP; done
+for i in `seq 1 20`; do curl $GKE_WEST_INGRESS_IP; done
+for i in `seq 1 20`; do curl $GKE_EAST_INGRESS_IP; done
 ```
 You can see about about 20% of the traffic going to `v1.0.1` (canary) and 80% to production `v1.0.0`.  We can use Istio to manipulate traffic inside the cluster.
 We can use:
@@ -337,10 +337,10 @@ We can use:
 
 ### Controlling traffic to production and canary releases
 
-Lets send 100% of the traffic to `prod` pods in `cluster-1`.  Istio uses `RouteRules` based on a match criteria and `weights` to route traffic to multiple deployments under one service.  Match criteria can be based on `labels` like `"stack": "canary"` or `"stack": "prod"`, or it can be based on HTTP Header info (for example, specific users or type of browsers etc).  For this workshop, you use `labels` to match traffic for `canary` and `prod` and `weights` to determine how much traffic to send for each deployment.
+Lets send 100% of the traffic to `prod` pods in `gke-west`.  Istio uses `RouteRules` based on a match criteria and `weights` to route traffic to multiple deployments under one service.  Match criteria can be based on `labels` like `"stack": "canary"` or `"stack": "prod"`, or it can be based on HTTP Header info (for example, specific users or type of browsers etc).  For this workshop, you use `labels` to match traffic for `canary` and `prod` and `weights` to determine how much traffic to send for each deployment.
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
-kubectx cluster-1
+kubectx gke-west
 kubectl apply -f myapp-rr-100p.yaml
 ```
 Inspect the `RouteRule`
@@ -352,7 +352,7 @@ _Output excerpt_
 Spec:
   Destination:
     Domain:  svc.cluster.local
-    Name:    myapp-cl1-lb
+    Name:    myapp-gke-west-lb
   Route:
     Labels:
       Stack:  prod
@@ -361,20 +361,21 @@ Spec:
 We see 100% of the traffic going to `prod` pods, labeled as `"Stack": "prod"`
 Confirm RouteRule.
 ```
-for i in `seq 1 10`; do curl $CLUSTER1_INGRESS_IP; done
+for i in `seq 1 10`; do curl $GKE_WEST_INGRESS_IP; done
 ```
 _Output_
 ```
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
 ```
 Now send 100% of the traffic to the `canary` pod.
 ```
@@ -390,7 +391,7 @@ _Output excerpt_
 Spec:
   Destination:
     Domain:  svc.cluster.local
-    Name:    myapp-cl1-lb
+    Name:    myapp-gke-west-lb
   Route:
     Labels:
       Stack:  canary
@@ -398,20 +399,20 @@ Spec:
 ```
 And confirm.
 ```
-for i in `seq 1 10`; do curl $CLUSTER1_INGRESS_IP; done
+for i in `seq 1 10`; do curl $GKE_WEST_INGRESS_IP; done
 ```
 _Output_
 ```
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
 ```
 Lastly, lets send 95% of the traffic to `prod` and only 5% of the traffic to `canary`.
 ```
@@ -427,7 +428,7 @@ _Output excerpt_
 Spec:
   Destination:
     Domain:  svc.cluster.local
-    Name:    myapp-cl1-lb
+    Name:    myapp-gke-west-lb
   Route:
     Labels:
       Stack:  prod
@@ -438,7 +439,7 @@ Spec:
 ```
 And confirm.
 ```
-for i in `seq 1 50`; do curl $CLUSTER1_INGRESS_IP; done
+for i in `seq 1 50`; do curl $GKE_WEST_INGRESS_IP; done
 ```
 You see only one or two requests hitting the `canary` pod, the rest are going to the `prod` pods.
 
@@ -452,7 +453,7 @@ go get -u github.com/rakyll/hey
 ```
 Run a simple benchmark without Rate Limiting applied.  Use `cluster-1` for this example.  The following command runs the benchmark for 10 seconds (type `hey` to get a description of defaults).
 ```
-hey -z 10s http://$CLUSTER1_INGRESS_IP
+hey -z 10s http://$GKE_WEST_INGRESS_IP
 ```
 _Output excerpt_
 ```
@@ -472,7 +473,7 @@ Note the `Requests/sec` in the `Summary` section as well as the `Status code dis
 Apply a Mixer Rate Limit rule to `cluster-1` and set the rate limit to 100 Requests/sec.
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
-kubectx cluster-1
+kubectx gke-west
 kubectl apply -f rl100.yaml
 ```
 Describe the `memquotas`.
