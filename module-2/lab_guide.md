@@ -1,5 +1,6 @@
 # Lab Guide
-Run this lab from Cloud Shell.  The following instructions assumes you have already run the DM setup and have three Kubernetes Engine clusters installed.
+Run this lab from Cloud Shell.  The following instructions assumes you have already run the DM setup and have three Kubernetes Engine clusters installed.  If you have not done so, go to the link below and follow the instructions to get the initial workshop setup.
+[Deployment Manager Setup](../dm-setup/README.md)
 
 ## Repo
 > 1 min
