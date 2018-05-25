@@ -14,37 +14,44 @@ This lab draws heavily from the [StackDriver: Quick start](https://qwiklabs.com/
 
 1. Create Stackdriver account
 2. Explore metrics from the GKE cluster
- * In StackDriver, go to Resources > Kubernetes and explore the system
- metrics for the clusters here.
  * In StackDriver, go to Resources > Metrics Explorer
  * In "Resource type", choose `k8s_container`. In "Metric", choose
   `kubernetes.io/container/cpu/core_usage_time`.
  * Still in Metrics Explorer, change the "Metric" to
  `external.googleapis.com/prometheus/request_duration_seconds`, and group by
  `service`.
+ * In StackDriver, go to Resources > Kubernetes and drill down in the
+ Infrastructure tab, and then in Workloads and Services.
+ * Select the front-end pod in the sock-shop namespace and inspect its metrics.
 3. Create a logs-based metric
- * Go to StackDriver Logging
- * Filter for logs with the following filter:
-```
-resource.type="k8s_container"
-resource.labels.location="us-west1-c"
-resource.labels.cluster_name="bootcamp-west"
-resource.labels.namespace_name="sock-shop"
-textPayload:Health
-```
- * Click on "Create Metric" and choose the name `sock-shop-healthchecks`
- * Back in the Metrics Explorer, look for the metric
- `logging.googleapis.com/user/sock-shop-healthchecks`
+ * Still on front-end click on "VIEW LOGS" then "GO TO LOGGING"
+ *  Append ` AND textPayload:"[31m500"` before closing ')'
+ * Replace `resource.labels.pod_name="front-end-xxxxxxxxxx-xxxxx"` by
+ `resource.labels.container_name="front-end"`
+ * Click on "Create Metric" and choose the name `500s-frontend`
 4. Create a simple StackDriver dashboard with the main metrics of the cluster
  * In the Dashboard menu, click on "Create Dashboard"
+ * Give a name to the dashboard in clicking on Untitled Dashboard (like 500s)
  * Click on "Add Chart"
- * Add a chart for healthchecks
- * Add a chart for the request duration monitored by Prometheus
- * Add a chart for the CPU usage of the "front-end" container
-5. Create an alert when the CPU usage of "front-end" is too high
- * In Alerting, create a new Policy, opt-in for the new UI
- * Create an alert when the "front-end" container uses more than 100ms/s CPU
-6. From your VM, run the following command: `hey -z 5m http://35.197.58.160/`
+ * Give a name to the chart: `front-end errors`
+ * In 'Find resource type and metrics' look for the metric you added:
+ `500s-frontend`
+ * Click save
+5. Create an alert when error rate increase
+ * On Stackdriver click on 'Alerting' -> 'Create a policy'
+ * Click on 'Add condition'
+ * Select 'Metric Threshold'
+ * In resource type, select 'Log Metrics'
+ * In configuration, IF METRIC select `user/500s-frontend` and set 1 to 'Threshold'
+ * Then Save Condition
+ * Click on 'Add Notification'
+ * Add your email
+ * Give a name to your policy
+ * Like 'Alert on 500s'
+6. Trigger the alert navigating the application
+ * In the application, add a pair of socks to your basket
+ * On the basket page, change the number of items to 0
+ * Click on "Update basket"
 
 ## Debugging
 
