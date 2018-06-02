@@ -98,7 +98,7 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     # Install Istio
     ISTIO_VERSION=0.8.0
     curl -L https://git.io/getLatestIstio | sh -
-    pushd istio-release-${ISTIO_VERSION}/
+    pushd istio-${ISTIO_VERSION}/
     helm install -n istio --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
     popd
     kubectl label namespace default istio-injection=enabled
