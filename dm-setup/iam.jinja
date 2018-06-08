@@ -12,51 +12,51 @@ limitations under the License.
 #}
 
 resources:
-- name: {{ env['deployment'] }}-cluster-sa
+- name: sa-{{ env['project_number'] }}-cluster
   type: iam.v1.serviceAccount
   properties:
-    accountId: {{ env['deployment'] }}-cluster-sa
+    accountId: sa-{{ env['project_number'] }}-cluster
     displayName: "Kubernetes cluster default service account"
-- name: {{ env['deployment'] }}-vm-sa
+- name: sa-{{ env['project_number'] }}-vm
   type: iam.v1.serviceAccount
   properties:
-    accountId: {{ env['deployment'] }}-vm-sa
+    accountId: sa-{{ env['project_number'] }}-vm
     displayName: "Student VM default service account"
-- name: get-iam-policy-{{ env['deployment'] }}
+- name: get-iam-policy-{{ env['project_number'] }}
   action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.getIamPolicy
   properties:
     resource: {{ env['project'] }}
   metadata:
     runtimePolicy:
     - UPDATE_ALWAYS
-- name: patch-iam-policy-{{ env['deployment'] }}
+- name: patch-iam-policy-{{ env['project_number'] }}
   action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.setIamPolicy
   properties:
     resource: {{ env['project'] }}
-    policy: $(ref.get-iam-policy-{{ env['deployment'] }})
+    policy: $(ref.get-iam-policy-{{ env['project_number'] }})
     gcpIamPolicyPatch:
       add:
       - role: roles/owner
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-vm-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-vm.email)
       - role: roles/storage.objectViewer
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)
       - role: roles/logging.logWriter
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)
       - role: roles/monitoring.metricWriter
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)
       - role: roles/monitoring.viewer
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)
       - role: roles/cloudtrace.agent
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)
       - role: roles/errorreporting.writer
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)
       - role: roles/clouddebugger.agent
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-cluster-sa.email)
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)
