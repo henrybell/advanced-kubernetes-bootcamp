@@ -13,6 +13,26 @@
 # limitations under the License.
 
 resources:
+- name: {{ env['project_number'] }}-cloudresourcemanager
+  action: gcp-types/servicemanagement-v1:servicemanagement.services.enable
+  properties:
+    consumerId: "project:{{ env['project'] }}"
+    serviceName: cloudresourcemanager.googleapis.com
+- name: {{ env['project_number'] }}-iam
+  action: gcp-types/servicemanagement-v1:servicemanagement.services.enable
+  properties:
+    consumerId: "project:{{ env['project'] }}"
+    serviceName: iam.googleapis.com
+- name: {{ env['project_number'] }}-cloudbuild
+  action: gcp-types/servicemanagement-v1:servicemanagement.services.enable
+  properties:
+    consumerId: "project:{{ env['project'] }}"
+    serviceName: cloudbuild.googleapis.com
+- name: {{ env['project_number'] }}-clouderrorreporting
+  action: gcp-types/servicemanagement-v1:servicemanagement.services.enable
+  properties:
+    consumerId: "project:{{ env['project'] }}"
+    serviceName: clouderrorreporting.googleapis.com
 - name: iam
   type: iam.jinja
 - name: west

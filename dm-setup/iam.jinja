@@ -17,11 +17,23 @@ resources:
   properties:
     accountId: sa-{{ env['project_number'] }}-cluster
     displayName: "Kubernetes cluster default service account"
+  metadata:
+    dependsOn:
+    - {{ env['project_number'] }}-cloudresourcemanager
+    - {{ env['project_number'] }}-iam
+    - {{ env['project_number'] }}-cloudbuild
+    - {{ env['project_number'] }}-clouderrorreporting
 - name: sa-{{ env['project_number'] }}-vm
   type: iam.v1.serviceAccount
   properties:
     accountId: sa-{{ env['project_number'] }}-vm
     displayName: "Student VM default service account"
+  metadata:
+    dependsOn:
+    - {{ env['project_number'] }}-cloudresourcemanager
+    - {{ env['project_number'] }}-iam
+    - {{ env['project_number'] }}-cloudbuild
+    - {{ env['project_number'] }}-clouderrorreporting
 - name: get-iam-policy-{{ env['project_number'] }}
   action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.getIamPolicy
   properties:
@@ -29,6 +41,11 @@ resources:
   metadata:
     runtimePolicy:
     - UPDATE_ALWAYS
+    dependsOn:
+    - {{ env['project_number'] }}-cloudresourcemanager
+    - {{ env['project_number'] }}-iam
+    - {{ env['project_number'] }}-cloudbuild
+    - {{ env['project_number'] }}-clouderrorreporting
 - name: patch-iam-policy-{{ env['project_number'] }}
   action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.setIamPolicy
   properties:
