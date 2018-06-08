@@ -36,7 +36,7 @@ resources:
     policy: $(ref.get-iam-policy-{{ env['project_number'] }})
     gcpIamPolicyPatch:
       add:
-      - role: roles/owner
+      - role: roles/editor
         members:
         - serviceAccount:$(ref.sa-{{ env['project_number'] }}-vm.email)
       - role: roles/storage.objectViewer
