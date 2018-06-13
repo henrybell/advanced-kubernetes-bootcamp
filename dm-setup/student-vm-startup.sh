@@ -58,6 +58,14 @@ EOF
 git clone https://github.com/ahmetb/kubectx
 cp kubectx/kube* /usr/local/bin
 
+# Install kube ps1
+cd $HOME
+git clone https://github.com/jonmosco/kube-ps1.git
+echo 'source $HOME/kube-ps1/kube-ps1.sh' >> ~/.bashrc
+export VAR="PS1='[\W \$(kube_ps1)]\$ '"
+echo $VAR >> ~/.bashrc
+source $HOME/.bashrc
+
 # Prometheus resources to install in the clusters
 wget -O prom-rbac.yml https://storage.googleapis.com/stackdriver-prometheus-documentation/rbac-setup.yml
 wget https://storage.googleapis.com/stackdriver-prometheus-documentation/prometheus-service.yml
@@ -164,6 +172,10 @@ gcs:
 
 # Disable minio the default
 minio:
+  enabled: false
+  
+# Disable jenkins
+jenkins:
   enabled: false
 
 # Configure your Docker registries here
