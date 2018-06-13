@@ -145,7 +145,7 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     gcloud projects add-iam-policy-binding ${PROJECT} --role roles/storage.admin --member serviceAccount:${SPINNAKER_SA_EMAIL}
     gcloud iam service-accounts keys create spinnaker-key.json --iam-account ${SPINNAKER_SA_EMAIL}
     export BUCKET=${PROJECT}-${DEPLOYMENT_NAME}
-    gsutil mb -c regional -l us-west1 gs://${BUCKET}
+    gsutil mb -c regional -l us-central1 gs://${BUCKET}
 
     # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
     git clone https://github.com/viglesiasce/charts -b mcs
@@ -163,7 +163,7 @@ kubeConfig:
   secretName: my-kubeconfig
   secretKey: config
   contexts:
-  - gke_${PROJECT}_us-west1-c_${DEPLOYMENT_NAME}-west
+  - gke_${PROJECT}_us-central1-f_${DEPLOYMENT_NAME}-central
   - gke_${PROJECT}_us-east4-b_${DEPLOYMENT_NAME}-east
 gcs:
   enabled: true
