@@ -84,6 +84,8 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
 
     # Get credentials for setting client as admin
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    kubectx gke-${CLUSTER_INFO_ARRAY[1]:3:-3}="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
     kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client
     # Needed for Spinnaker to be able to authenticate to the API
     export CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True
@@ -129,6 +131,8 @@ SPINNAKER_CLUSTERS=$(gcloud container clusters list --format 'csv[no-heading](na
 for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     CLUSTER_INFO_ARRAY=(${CLUSTER_INFO//,/ })
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    kubectx gke-spinnaker="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
     kubectl apply -f tiller-rbac.yaml
     helm init --service-account tiller
     # Wait for tiller to be running
