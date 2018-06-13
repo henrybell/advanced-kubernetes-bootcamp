@@ -1,0 +1,3 @@
+operator/example-es-cluster.yaml
+**/*.old
+NOTES.md
