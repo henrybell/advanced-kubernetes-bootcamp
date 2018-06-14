@@ -1,10 +1,10 @@
 apiVersion: config.istio.io/v1alpha2
 kind: RouteRule
 metadata:
-  name: myapp-routerules-5050
+  name: myapp-routerules-95p-5c
 spec:
   destination:
-    name: myapp-gke-west-lb
+    name: myapp-gke-central-lb
     domain: svc.cluster.local
   route:
   - labels:
