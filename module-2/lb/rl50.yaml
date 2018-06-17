@@ -14,7 +14,7 @@ spec:
     # The following override applies to 'ratings' when
     # the source is 'reviews'.
     - dimensions:
-        destination: myapp-cl1-lb
+        destination: myapp-gke-central-lb
       maxAmount: 1
       validDuration: 1s
 ---
@@ -62,5 +62,5 @@ spec:
   - name: request-count
     namespace: default
   services:
-  - name: myapp-cl1-lb
+  - name: myapp-gke-central-lb
     namespace: default

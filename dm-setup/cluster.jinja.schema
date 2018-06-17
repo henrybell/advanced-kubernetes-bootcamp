@@ -24,6 +24,12 @@ info:
 required:
 - zone
 
+imports:
+- name: student-vm-startup.sh
+  path: student-vm-startup.sh
+- name: complete-demo.yaml
+  path: deployment-manifests/complete-demo.yaml
+
 properties:
   zone:
     type: string
@@ -41,6 +47,10 @@ properties:
     type: string
     description: CIDR of network that should be allowed to access the Kubernetes API
     default: "0.0.0.0/0"
+  sockShop:
+    type: string
+    descript: Whether or not to deploy the Sock Shop app on this cluster
+    default: "not-installed"
 
 outputs:
   clusterType:

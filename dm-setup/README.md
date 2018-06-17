@@ -1,5 +1,11 @@
 # Advanced Kubernetes Bootcamp Initial Setup
 
+## Quota
+
+* CPU
+  * us-west1 - 28
+  * us-east1 - 12
+
 ## IAM
 
 Ensure that the Deployment Manager Service Account
@@ -13,7 +19,15 @@ the bootcamp resources (clusters, service accounts, etc):
     gcloud services enable cloudresourcemanager.googleapis.com
     gcloud services enable iam.googleapis.com
     gcloud services enable cloudbuild.googleapis.com
+    gcloud services enable clouderrorreporting.googleapis.com
 
 ## Create Deployment
 
-    gcloud deployment-manager deployments create --config cluster.yaml adv-bc-$(date +%s)
+    gcloud deployment-manager deployments create --config workshop.yaml adv-bc-$(date +%s)
+
+## Recreating the deployment
+
+If you need to recreate the deployment (for development purposes) several times
+in the same project, you need to manually delete the service accounts created
+by the deployment after deleting it. Also delete the role bindings for those
+service accounts.

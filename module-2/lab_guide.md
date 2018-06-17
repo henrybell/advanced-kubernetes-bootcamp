@@ -1,58 +1,47 @@
 # Lab Guide
-Run this lab from Cloud Shell
+Run this lab from Cloud Shell.  The following instructions assumes you have already run the DM setup and have three Kubernetes Engine clusters installed.  If you have not done so, go to the link below and follow the instructions to get the initial workshop setup.
+
+[Deployment Manager Setup](../dm-setup/README.md)
+
 ## Repo
 > 1 min
 
-Get all files associated with this workshop by cloning the following repo.
+Get all files associated with this workshop by cloning the following repo.  If you have already done this you can skip this step.
 ```
 git clone https://github.com/henrybell/advanced-kubernetes-bootcamp.git
 ```
 ## Tools
 > 1 min
 
-Install kubectx/kubens
+Run the following bash script to install tools required for this workshop.
 ```
-mkdir bin
-export PATH=$PATH:~/bin/
-sudo git clone https://github.com/ahmetb/kubectx ~/kubectx
-sudo ln -s ~/kubectx/kubectx ~/bin/kubectx
-sudo ln -s ~/kubectx/kubens ~/bin/kubens
+. ~/advanced-kubernetes-bootcamp/module-2/tools/tools.sh
 ```
-Install helm
-```
-curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
-chmod 700 get_helm.sh
-./get_helm.sh
-```
-## Create Kubernetes Engine Clusters
+The following tools are installed:
+* kubectx/kubens
+* Helm
+* kube-ps1
+
+## Connect to the Kubernetes Engine Clusters
 > 5 mins
 
-Set default zone.
-```
-gcloud config set compute/zone us-west1-a
-```
-Create three (3) Kubernetes Engine clusters.  Cluster-1 and cluster-2 run the applications.  Cluster-3 runs Spinnaker, NGINX global load balancer and Container Registry.  Cluster-3 needs to be 3 nodes with `n1-standard-2` due to Spinnaker compute requirements.
-```
-gcloud container clusters create cluster-1 --async --cluster-version=1.9.6-gke.1
-gcloud container clusters create cluster-2 --async --cluster-version=1.9.6-gke.1
-gcloud container clusters create cluster-3 --async --machine-type=n1-standard-2 --cluster-version=1.9.6-gke.1
-```
-Clusters take 3-5 minutes to be deployed and ready.  Check the Cloud Console **Kubernetes Engine > Kubernetes clusters** page for status.
+You have three (3) Kubernetes Engine clusters in the project.  The suffix for the clusters are `-east`, `-west` and `-spinnaker`.  You use `-east` and `-west` clusters for applications, and the `-spinnaker` cluster for continuous delivery and global load balancing using NGINX load balancer.  
 
-<img src="diagrams/kube-clusters-status.png">
-
-
-After the clusters are Ready, create `kubeconfig` for all three clusters.
+Create `kubeconfig` for all three clusters.
 ```
-gcloud container clusters get-credentials cluster-1 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
-gcloud container clusters get-credentials cluster-2 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
-gcloud container clusters get-credentials cluster-3 --zone us-west1-a --project $(gcloud info --format='value(config.project)')
+export GKE_EAST=$(gcloud container clusters list --zone us-east4-b --format='value(name)')
+export GKE_WEST=$(gcloud container clusters list --zone us-west1-c --format='value(name)')
+export GKE_SPINNAKER=$(gcloud container clusters list --zone us-west1-b --format='value(name)')
+export PROJECT=$(gcloud info --format='value(config.project)')
+gcloud container clusters get-credentials $GKE_SPINNAKER --zone us-west1-b --project $PROJECT
+gcloud container clusters get-credentials $GKE_EAST --zone us-east4-b --project $PROJECT
+gcloud container clusters get-credentials $GKE_WEST --zone us-west1-c --project $PROJECT
 ```
-Rename cluster context for easy switching.
+Rename cluster contexts for easy switching.
 ```
-kubectx cluster-1=gke_$(gcloud info --format='value(config.project)')_us-west1-a_cluster-1
-kubectx cluster-2=gke_$(gcloud info --format='value(config.project)')_us-west1-a_cluster-2
-kubectx cluster-3=gke_$(gcloud info --format='value(config.project)')_us-west1-a_cluster-3
+kubectx gke-spinnaker="gke_"$PROJECT"_us-west1-b_"$GKE_SPINNAKER
+kubectx gke-east="gke_"$PROJECT"_us-east4-b_"$GKE_EAST
+kubectx gke-west="gke_"$PROJECT"_us-west1-c_"$GKE_WEST
 ```
 Check new context names
 ```
@@ -60,72 +49,36 @@ kubectx
 ```
 _Output_
 ```
-cluster-1
-cluster-2
-cluster-3
+gke-east
+gke-spinnaker
+gke-west
 ```
 Current context is highlighted.
-## Install Istio on cluster-1 and cluster-2
+## Istio on gke-west and gke-east
 > 5 mins
 
-Download istio nightly build for 0.8 (*should be released by bootcamp*)
+Later in the lab, you use Istio for traffic management.  Ensure Istio is installed on `gke-west` and `gke-east` clusters.
 ```
-mkdir istio8
-cd istio8
-wget https://storage.googleapis.com/istio-prerelease/daily-build/release-0.8-20180425-19-12/istio-release-0.8-20180425-19-12-linux.tar.gz
-tar -xzvf istio-release-0.8-20180425-19-12-linux.tar.gz
-cd istio-release-0.8-20180425-19-12/
-```
-Install Istio to `cluster-1` and `cluster-2` via helm
-
-_Cluster-1_
-```
-kubectx cluster-1
-kubectl create clusterrolebinding user-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
-kubectl create serviceaccount tiller --namespace kube-system
-kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-```
-Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
-> Istio helm chart takes a couple of minutes to deploy
-
-```
-helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
-```
-_Cluster-2_
-```
-kubectx cluster-2
-kubectl create clusterrolebinding user-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
-kubectl create serviceaccount tiller --namespace kube-system
-kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-```
-Wait for `tiller` to be deployed.  This takes a few moments.  Install Istio via helm chart with sidecar injector as shown below.
-> Istio helm chart takes a couple of minutes to deploy
-
-```
-helm install --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
-```
-Install `tiller` on `cluster-3` for Spinnaker installation in the next section.
-```
-kubectx cluster-3
-kubectl create clusterrolebinding user-admin-binding --clusterrole=cluster-admin --user=$(gcloud config get-value account)
-kubectl create serviceaccount tiller --namespace kube-system
-kubectl create clusterrolebinding tiller-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account=tiller
-```
-
-Activate sidecar injector for `default` namespace on both `cluster-1` and `cluster-2`
-```
-kubectl label namespace default istio-injection=enabled --context cluster-1
-kubectl label namespace default istio-injection=enabled --context cluster-2
-```
-Confirm _ISTIO-INJECTION_ is enabled on both `cluster-1` and `cluster-2`
-```
-kubectl get namespace -L istio-injection --context cluster-1
-kubectl get namespace -L istio-injection --context cluster-2
+kubectl get deploy -n istio-system --context gke-west
+kubectl get deploy -n istio-system --context gke-east
 ```
 _Output_
+```
+NAME                       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+istio-citadel              1         1         1            1           44m
+istio-ingress              1         1         1            1           44m
+istio-pilot                1         1         1            1           44m
+istio-policy               1         1         1            1           44m
+istio-sidecar-injector     1         1         1            1           44m
+istio-statsd-prom-bridge   1         1         1            1           44m
+istio-telemetry            1         1         1            1           44m
+```
+Confirm _ISTIO-INJECTION_ is enabled on both `gke-west` and `gke-east`
+```
+kubectl get namespace -L istio-injection --context gke-west
+kubectl get namespace -L istio-injection --context gke-east
+```
+_Output excerpt_
 ```
 NAME           STATUS    AGE       ISTIO-INJECTION
 default        Active    7m        enabled
@@ -134,113 +87,32 @@ kube-public    Active    7m
 kube-system    Active    7m
 ```
 
-## Install Spinnaker on cluster-3
+## Spinnaker on gke-spinnaker
 > 20 mins
 
-Switch to `cluster-3` context
+You can use Spinnaker to continuously deploy applications to Kubernetes Engine clusters.  In this workshop, you use `gke-spinnaker` cluster, which has Spinnaker installed, to deploy applications on `gke-west` and `gke-east` clusters.  Ensure Spinnaker and all of its components are installed on `gke-spinnaker`.
 ```
-kubectx cluster-3
+kubectx gke-spinnaker
+kubectl get deployments
 ```
-Create Spinnaker service account and assign it `storage.admin` role.
+_Output_
 ```
-gcloud iam service-accounts create spinnaker-sa --display-name spinnaker-sa
-export SPINNAKER_SA_EMAIL=$(gcloud iam service-accounts list \
-    --filter="displayName:spinnaker-sa" \
-    --format='value(email)')
-export PROJECT=$(gcloud info --format='value(config.project)')
-gcloud projects add-iam-policy-binding $PROJECT --role roles/storage.admin --member serviceAccount:$SPINNAKER_SA_EMAIL
-```
-Create the service account key
-```
-cd ~/advanced-kubernetes-bootcamp/module-2
-gcloud iam service-accounts keys create spinnaker-key.json --iam-account $SPINNAKER_SA_EMAIL
-```
-Create a Cloud Storage bucket for Spinnaker
-```
-export BUCKET=$PROJECT-spinnaker-conf
-gsutil mb -c regional -l us-west1 gs://$BUCKET
-```
-Clone the Spinnaker git repo and build
-```
-git clone https://github.com/viglesiasce/charts -b mcs
-cd charts/stable/spinnaker
-helm dep build
-```
-Grant user `client` cluster admin role and create `Client Certs` for `cluster-1` and `cluster-2`.  Spinnaker uses Client Certs for authentication to Kubernetes clusters.
-```
-kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-1
-kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client --context cluster-2
-CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True gcloud container clusters get-credentials cluster-1 --zone us-west1-a
-CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True gcloud container clusters get-credentials cluster-2 --zone us-west1-a
-```
-Ensure that client certs are present in the kubeconfig file
-```
-cat ~/.kube/config
-```
-Output should show `client-certificate-data` and `client-key-data` under the `user` stanza for `cluster-1` and `cluster-2` contexts.
-
-Create a secret from the `kubeconfig` file for Spinnaker
-```
-kubectx cluster-3
-kubectl create secret generic --from-file=config=$HOME/.kube/config my-kubeconfig
-```
-Create configuration for the Spinnaker config YAML.
-Define variables
-```
-cd ~/advanced-kubernetes-bootcamp/module-2
-export SA_JSON=$(cat spinnaker-key.json)
-export BUCKET=$PROJECT-spinnaker-conf
-export CL1_CONTEXT="gke_"$PROJECT"_us-west1-a_cluster-1"
-export CL2_CONTEXT="gke_"$PROJECT"_us-west1-a_cluster-2"
-```
-Create the config file
-```
-cd charts/stable/spinnaker
-cat > spinnaker-config.yaml <<EOF
-storageBucket: $BUCKET
-kubeConfig:
-  enabled: true
-  secretName: my-kubeconfig
-  secretKey: config
-  contexts:
-  - $CL1_CONTEXT
-  - $CL2_CONTEXT
-gcs:
-  enabled: true
-  project: $PROJECT
-  jsonKey: '$SA_JSON'
-
-
-
-# Disable minio the default
-minio:
-  enabled: false
-
-
-
-# Configure your Docker registries here
-accounts:
-- name: gcr
-  address: https://gcr.io
-  username: _json_key
-  password: '$SA_JSON'
-  email: 1234@5678.com 
-EOF
-```
-Ensure the file has the correct values for the `SA_JSON` and `BUCKET` variables.
-```
-cat spinnaker-config.yaml
-```
-Install Spinnaker.  
-
-***This step could take up to 10 minutes (use timeout of 600 seconds)***
-```
-helm install -n mc-taw . -f spinnaker-config.yaml --timeout 600
+NAME                           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+mc-taw-jenkins                 1         1         1            1           1h
+mc-taw-redis                   1         1         1            1           1h
+mc-taw-spinnaker-clouddriver   1         1         1            1           1h
+mc-taw-spinnaker-deck          1         1         1            1           1h
+mc-taw-spinnaker-echo          1         1         1            1           1h
+mc-taw-spinnaker-front50       1         1         1            1           1h
+mc-taw-spinnaker-gate          1         1         1            1           1h
+mc-taw-spinnaker-igor          1         1         1            1           1h
+mc-taw-spinnaker-orca          1         1         1            1           1h
+mc-taw-spinnaker-rosco         1         1         1            1           1h
 ```
 Expose the `DECK` (Spinnaker frontend) pod.
 ```
-export DECK_POD=$(kubectl get pods --namespace default -l "component=deck" -o jsonpath="{.items[0].metadata.name}" --context cluster-3) 
-kubectl port-forward --namespace default $DECK_POD 8080:9000 --context cluster-3 >> /dev/null &
+export DECK_POD=$(kubectl get pods --namespace default -l "component=deck" -o jsonpath="{.items[0].metadata.name}") 
+kubectl port-forward --namespace default $DECK_POD 8080:9000 >> /dev/null &
 ```
 Access the Spinnaker GUI using the Cloud Shell Preview
 
@@ -261,10 +133,10 @@ Only provide app name `myapp` and email which can be arbitrary like `abc@xyz.com
 
 To avoid having to enter the information manually in the UI, use the Kubernetes command-line interface to create load balancers (or `Clusters`) and Ingresses (or `Security Groups`) for your services. Alternatively, you can perform this operation in the Spinnaker UI.
 ```
-kubectx cluster-1
-kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl1-k8s
-kubectx cluster-2
-kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/cl2-k8s
+kubectx gke-west
+kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/gke-west
+kubectx gke-east
+kubectl apply -f ~/advanced-kubernetes-bootcamp/module-2/gke-east
 ```
 ## Prepare Container Registry
 > 5 mins
@@ -303,8 +175,9 @@ gcr.io/qwiklabs-gcp-28ba43f03d974ba6/web-server
 Deploy pipeline via JSON
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/spinnaker
-export GCP_ZONE=us-west1-a
-sed -e s/PROJECT/$PROJECT/g -e s/GCP_ZONE/$GCP_ZONE/g pipeline.json | curl -d@- -X \
+export ZONE_WEST=us-west1-c
+export ZONE_EAST=us-east4-b
+sed -e s/PROJECT/$PROJECT/g -e s/ZONE_WEST/$ZONE_WEST/g -e s/ZONE_EAST/$ZONE_EAST/g -e s/GKE_WEST/$GKE_WEST/g -e s/GKE_EAST/$GKE_EAST/g pipeline.json | curl -d@- -X \
     POST --header "Content-Type: application/json" --header \
     "Accept: /" http://localhost:8080/gate/pipelines
 ```
@@ -361,25 +234,25 @@ curl 35.185.215.157
 ```
 _Output_
 ```
-myapp-canary-cl1-v1.0.0
+myapp-canary-gke-west-v1.0.0
 ```
-The output of `curl` has the form _appName-environment-cluster-version_.  The above output shows `myapp` application running as `canary` on `cluster-1` and the version is `v1.0.0`.  This is helpful when you have multiple versions running in multiple environments on multiple clusters.  This is done using an `arg` in the deployment YAML that is pushed to the index.html file.  (You can inspect this in the `Deploy` stages in the pipeline)
+The output of `curl` has the form _appName-environment-cluster-version_.  The above output shows `myapp` application running as `canary` on `gke-west` and the version is `v1.0.0`.  This is helpful when you have multiple versions running in multiple environments on multiple clusters.  This is done using an `arg` in the deployment YAML that is pushed to the index.html file.  (You can inspect this in the `Deploy` stages in the pipeline)
 
-## Globally load balance client traffic to both clusters
+## Globally load balance client traffic to gke-west and gke-east clusters
 > 10 mins
 
 For this workshop, you use NGINX load balancer to direct traffic to the web application running in both clusters.  In production environments, you can use a third party provider for this service.  CloudFlare, Akamai or backplane.io all provide this functionality.  
 
 Store the Ingress IP addresses for the two clusters in variables
 ```
-export CLUSTER1_INGRESS_IP=$(kubectl get ingress myapp-cl1-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-1)
-export CLUSTER2_INGRESS_IP=$(kubectl get ingress myapp-cl2-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context cluster-2)
+export GKE_WEST_INGRESS_IP=$(kubectl get ingress myapp-gke-west-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context gke-west)
+export GKE_EAST_INGRESS_IP=$(kubectl get ingress myapp-gke-east-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}' --context gke-east)
 ```
-Use `cluster-3` for global load balancing.  Create the NGINX ConfigMap in `cluster-3`
+Use `gke-spinnaker` for global load balancing.  Create the NGINX ConfigMap in `gke-spinnaker`
 ```
-kubectx cluster-3
+kubectx gke-spinnaker
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
-sed -e s/CLUSTER1_INGRESS_IP/$CLUSTER1_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$CLUSTER2_INGRESS_IP\ weight=1/g glb-configmap-var.yaml > glb-configmap.yaml
+sed -e s/CLUSTER1_INGRESS_IP/$GKE_WEST_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$GKE_EAST_INGRESS_IP\ weight=1/g glb-configmap-var.yaml > glb-configmap.yaml
 ```
 Confirm that the Ingress IP addresses are in the output file.
 ```
@@ -405,15 +278,15 @@ for i in `seq 1 20`; do curl $GLB_IP; done
 ```
 Traffic to the two (2) canary pods is being split 50/50.  This ratio can be controlled by the `weight` field in the ConfigMap  generated earlier.  Recall that you set the `weight` fields for both clusters to `1`.
 
-Adjust the `weight` fields in the ConfigMap by changing the `weight` for `cluster-2` to `4`.  Set the `weight` for `cluster-1` to `1` (same as before).  Apply the new configmap and deployment.
+Adjust the `weight` fields in the ConfigMap by changing the `weight` for `gke-east` to `4`.  Set the `weight` for `gke-west` to `1` (same as before).  Apply the new configmap and deployment.
 ```
-sed -e s/CLUSTER1_INGRESS_IP/$CLUSTER1_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$CLUSTER2_INGRESS_IP\ weight=4/g glb-configmap-var.yaml > glb-configmap-2.yaml
+sed -e s/CLUSTER1_INGRESS_IP/$GKE_WEST_INGRESS_IP\ weight=1/g -e s/CLUSTER2_INGRESS_IP/$GKE_EAST_INGRESS_IP\ weight=4/g glb-configmap-var.yaml > glb-configmap-2.yaml
 kubectl delete -f glb-configmap.yaml
 kubectl delete -f nginx-dep.yaml
 kubectl apply -f glb-configmap-2.yaml
 kubectl apply -f nginx-dep.yaml
 ```
-Do a for loop curl on the `GLB_IP` and you can see more traffic going to `cluster-2` due to higher `weight` (4 versus 1).
+Do a for loop curl on the `GLB_IP` and you can see more traffic going to `gke-east` due to higher `weight` (4 versus 1).
 ```
 for i in `seq 1 20`; do curl $GLB_IP; done
 ```
@@ -456,8 +329,8 @@ By default, traffic gets evenly split to all pods within a service.  The service
 
 Do a for loop curl on Ingress IP addresses for cluster-1 and cluster-2.
 ```
-for i in `seq 1 20`; do curl $CLUSTER1_INGRESS_IP; done
-for i in `seq 1 20`; do curl $CLUSTER2_INGRESS_IP; done
+for i in `seq 1 20`; do curl $GKE_WEST_INGRESS_IP; done
+for i in `seq 1 20`; do curl $GKE_EAST_INGRESS_IP; done
 ```
 You can see about about 20% of the traffic going to `v1.0.1` (canary) and 80% to production `v1.0.0`.  We can use Istio to manipulate traffic inside the cluster.
 We can use:
@@ -466,10 +339,10 @@ We can use:
 
 ### Controlling traffic to production and canary releases
 
-Lets send 100% of the traffic to `prod` pods in `cluster-1`.  Istio uses `RouteRules` based on a match criteria and `weights` to route traffic to multiple deployments under one service.  Match criteria can be based on `labels` like `"stack": "canary"` or `"stack": "prod"`, or it can be based on HTTP Header info (for example, specific users or type of browsers etc).  For this workshop, you use `labels` to match traffic for `canary` and `prod` and `weights` to determine how much traffic to send for each deployment.
+Lets send 100% of the traffic to `prod` pods in `gke-west`.  Istio uses `RouteRules` based on a match criteria and `weights` to route traffic to multiple deployments under one service.  Match criteria can be based on `labels` like `"stack": "canary"` or `"stack": "prod"`, or it can be based on HTTP Header info (for example, specific users or type of browsers etc).  For this workshop, you use `labels` to match traffic for `canary` and `prod` and `weights` to determine how much traffic to send for each deployment.
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
-kubectx cluster-1
+kubectx gke-west
 kubectl apply -f myapp-rr-100p.yaml
 ```
 Inspect the `RouteRule`
@@ -481,7 +354,7 @@ _Output excerpt_
 Spec:
   Destination:
     Domain:  svc.cluster.local
-    Name:    myapp-cl1-lb
+    Name:    myapp-gke-west-lb
   Route:
     Labels:
       Stack:  prod
@@ -490,20 +363,21 @@ Spec:
 We see 100% of the traffic going to `prod` pods, labeled as `"Stack": "prod"`
 Confirm RouteRule.
 ```
-for i in `seq 1 10`; do curl $CLUSTER1_INGRESS_IP; done
+for i in `seq 1 10`; do curl $GKE_WEST_INGRESS_IP; done
 ```
 _Output_
 ```
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
-myapp-prod-cl1-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
+myapp-prod-gke-west-v1.0.0
 ```
 Now send 100% of the traffic to the `canary` pod.
 ```
@@ -519,7 +393,7 @@ _Output excerpt_
 Spec:
   Destination:
     Domain:  svc.cluster.local
-    Name:    myapp-cl1-lb
+    Name:    myapp-gke-west-lb
   Route:
     Labels:
       Stack:  canary
@@ -527,20 +401,20 @@ Spec:
 ```
 And confirm.
 ```
-for i in `seq 1 10`; do curl $CLUSTER1_INGRESS_IP; done
+for i in `seq 1 10`; do curl $GKE_WEST_INGRESS_IP; done
 ```
 _Output_
 ```
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
-myapp-canary-cl1-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
+myapp-canary-gke-west-v1.0.1
 ```
 Lastly, lets send 95% of the traffic to `prod` and only 5% of the traffic to `canary`.
 ```
@@ -556,7 +430,7 @@ _Output excerpt_
 Spec:
   Destination:
     Domain:  svc.cluster.local
-    Name:    myapp-cl1-lb
+    Name:    myapp-gke-west-lb
   Route:
     Labels:
       Stack:  prod
@@ -567,7 +441,7 @@ Spec:
 ```
 And confirm.
 ```
-for i in `seq 1 50`; do curl $CLUSTER1_INGRESS_IP; done
+for i in `seq 1 50`; do curl $GKE_WEST_INGRESS_IP; done
 ```
 You see only one or two requests hitting the `canary` pod, the rest are going to the `prod` pods.
 
@@ -581,7 +455,7 @@ go get -u github.com/rakyll/hey
 ```
 Run a simple benchmark without Rate Limiting applied.  Use `cluster-1` for this example.  The following command runs the benchmark for 10 seconds (type `hey` to get a description of defaults).
 ```
-hey -z 10s http://$CLUSTER1_INGRESS_IP
+hey -z 10s http://$GKE_WEST_INGRESS_IP
 ```
 _Output excerpt_
 ```
@@ -601,8 +475,8 @@ Note the `Requests/sec` in the `Summary` section as well as the `Status code dis
 Apply a Mixer Rate Limit rule to `cluster-1` and set the rate limit to 100 Requests/sec.
 ```
 cd ~/advanced-kubernetes-bootcamp/module-2/lb
-kubectx cluster-1
-Kubectl apply -f rl100.yaml
+kubectx gke-west
+kubectl apply -f rl100.yaml
 ```
 Describe the `memquotas`.
 ```
@@ -615,7 +489,7 @@ Quotas:
     Name:        requestcount.quota.default
     Overrides:
       Dimensions:
-        Destination:   myapp-cl1-lb
+        Destination:   myapp-gke-west-lb
       Max Amount:      1
       Valid Duration:  1s
     Valid Duration:    1s
@@ -623,7 +497,7 @@ Quotas:
 Note the `Max amount` of `100` with a `Valid Duration` of `1` second.
 Run the benchmark again.
 ```
-hey -z 10s http://$CLUSTER1_INGRESS_IP
+hey -z 10s http://$GKE_WEST_INGRESS_IP
 ```
 _Output excerpt_
 ```
