@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 #}
 
-{% set VM_NAME = 'student-vm-' + env["deployment"] %}
+{% set VM_NAME = 'student-vm-' + env['project_number'] %}
 
 resources:
 - type: compute.v1.instance
@@ -34,7 +34,7 @@ resources:
       - name: External NAT
         type: ONE_TO_ONE_NAT
     serviceAccounts:
-    - email: $(ref.{{ env['deployment'] }}-vm-sa.email)
+    - email: $(ref.sa-{{ env['project_number'] }}-vm.email)
       scopes:
       - https://www.googleapis.com/auth/cloud-platform
     metadata:
