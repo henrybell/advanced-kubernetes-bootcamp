@@ -308,7 +308,8 @@ spec:
     spec:
       containers:
       - name: front-end
-        image: gcr.io/next-2018-k8s-bootcamp/front-end:20180608
+        # Source: https://github.com/MrTrustor/front-end
+        image: gcr.io/next-2018-k8s-bootcamp/front-end:20180619
         resources:
           requests:
             cpu: 100m
