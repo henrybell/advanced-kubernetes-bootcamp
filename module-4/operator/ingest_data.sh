@@ -10,7 +10,8 @@ trap cleanup EXIT
 
 echo "INFO: Ingesting data from mysql: ${MYSQL_ADDR} to Elasticsearch: ${ES_ADDR}"
 
-kubectl run -n elasticsearch logstash -i --rm --restart=Never --command bash --image docker.elastic.co/logstash/logstash:6.2.4 -- -c '
+kubectl run -n elasticsearch logstash -i --rm --restart=Never --env XPACK_MONITORING_ENABLED=false --command bash --image docker.elastic.co/logstash/logstash:6.2.4 -- -c '
+env2yaml /usr/share/logstash/config/logstash.yml
 curl -LO https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.36/mysql-connector-java-5.1.36.jar
 cat > logstash.conf <<EOF
 input {
