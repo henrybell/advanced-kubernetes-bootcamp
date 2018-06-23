@@ -10,6 +10,11 @@ DEPLOYMENT_NAME=`metadata_value "instance/attributes/deployment"`
 apt-get update
 apt-get install -y git kubectl
 
+# Install Docker
+curl -fsSL get.docker.com -o get-docker.sh
+sh get-docker.sh &&
+for user in $(grep '^google-sudoers:' /etc/group | cut -f 4 -d : | awk 'BEGIN { RS= "," } {print}'); do usermod -a -G docker $user;done
+
 # Add Bash completion for gcloud
 echo 'source /usr/share/google-cloud-sdk/completion.bash.inc' >> /etc/profile
 
@@ -190,5 +195,5 @@ accounts:
   password: '${SA_JSON}'
   email: 1234@5678.com
 EOF
-    helm install -n adv-k8s stable/spinnaker -f spinnaker-config.yaml --timeout 600
+    helm install -n adv-k8s stable/spinnaker -f spinnaker-config.yaml --timeout 600 --version 0.5.0
 done
