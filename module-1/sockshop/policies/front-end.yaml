@@ -12,6 +12,8 @@ spec:
   - Egress
   ingress:
   - from: []
+#    - ipBlock:
+#        cidr: 127.0.0.1/32
   egress:
   - to:
     - podSelector:
