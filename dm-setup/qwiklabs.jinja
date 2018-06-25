@@ -35,7 +35,7 @@ resources:
     serviceName: clouderrorreporting.googleapis.com
 - name: iam
   type: iam.jinja
-- name: west
+- name: central
   type: cluster.jinja
   properties:
     location: us-central1-f
@@ -65,6 +65,6 @@ resources:
     dependsOn:
     - iam
     - east
-    - west
+    - central
   properties:
     zone: us-central1-f
