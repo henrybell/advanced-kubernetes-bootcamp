@@ -1,0 +1,7 @@
+M,False,legacyAbac.enabled,Legacy ABAC enabled
+M,True,addonsConfig.kubernetesDashboard.disabled,kubernetes dashboard disabled
+M,True,masterAuthorizedNetworksConfig.enabled,master authorized network enabled
+E,-,masterAuth.username,no master auth user
+N,default,network,cluster network
+M,COS,nodeConfig.imageType,image type
+M,True,networkPolicy.enabled,network policy enabled

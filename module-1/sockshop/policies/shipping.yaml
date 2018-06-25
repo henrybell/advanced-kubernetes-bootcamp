@@ -1,0 +1,19 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: shipping
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: shipping
+  policyTypes:
+    - Ingress
+  ingress:
+  - from:
+      - podSelector:
+          matchLabels:
+            name: orders
+    ports:
+      - protocol: TCP
+        port: 80

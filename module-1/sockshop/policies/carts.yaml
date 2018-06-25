@@ -1,0 +1,51 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: carts
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: carts
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+  - from:
+      - podSelector:
+          matchLabels:
+            name: front-end
+      - podSelector:
+          matchLabels:
+            name: orders
+    ports:
+      - protocol: TCP
+        port: 80
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          name: carts-db
+    ports:
+      - protocol: TCP
+        port: 27017
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: carts-db-allow-carts
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: carts-db
+  policyTypes:
+    - Ingress
+  ingress:
+  - from:
+      - podSelector:
+          matchLabels:
+            name: carts
+    ports:
+      - protocol: TCP
+        port: 27017

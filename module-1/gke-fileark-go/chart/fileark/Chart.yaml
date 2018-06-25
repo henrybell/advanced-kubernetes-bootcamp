@@ -1,0 +1,4 @@
+apiVersion: v1
+description: A Helm chart that deploys the fileark service to a Kubernetes cluster
+name: fileark
+version: 0.1.0

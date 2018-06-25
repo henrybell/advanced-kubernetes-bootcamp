@@ -1,0 +1,34 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: front-end
+  namespace: sock-shop
+spec:
+  podSelector:
+    matchLabels:
+      name: front-end
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from: []
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          name: user
+    - podSelector:
+        matchLabels:
+          name: carts
+    - podSelector:
+        matchLabels:
+          name: orders
+    - podSelector:
+        matchLabels:
+          name: catalogue
+    - podSelector:
+        matchLabels:
+          name: payment
+  - ports:
+    - protocol: TCP
+      port: 80
