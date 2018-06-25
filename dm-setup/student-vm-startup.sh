@@ -192,3 +192,8 @@ accounts:
 EOF
     helm install -n adv-k8s stable/spinnaker -f spinnaker-config.yaml --timeout 600 --version 0.5.0
 done
+
+# Signal completion to waiter
+HOSTNAME=$(hostname)
+gcloud beta runtime-config configs variables set \
+            success/${HOSTNAME} --config-name ${HOSTNAME}-config

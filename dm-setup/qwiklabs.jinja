@@ -68,3 +68,10 @@ resources:
     - central
   properties:
     zone: us-central1-f
+- name: student-vm-waiter
+  type: waiter.jinja
+  properties:
+    timeout: 600s
+  metadata:
+    dependsOn:
+    - student-vm
