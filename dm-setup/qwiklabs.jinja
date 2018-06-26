@@ -41,7 +41,7 @@ resources:
     location: us-central1-f
     purpose: workloads
     apiVersion: v1beta1
-    kubernetesVersion: "1.10"
+    kubernetesVersion: "1.10.4"
     monitoringService: monitoring.googleapis.com/kubernetes
     loggingService: logging.googleapis.com/kubernetes
     sockShop: "installed"
@@ -51,7 +51,7 @@ resources:
     location: us-east4-b
     purpose: workloads
     apiVersion: v1beta1
-    kubernetesVersion: "1.10"
+    kubernetesVersion: "1.10.4"
     monitoringService: monitoring.googleapis.com/kubernetes
     loggingService: logging.googleapis.com/kubernetes
 - name: spinnaker
@@ -59,6 +59,7 @@ resources:
   properties:
     zone: us-central1-f
     purpose: spinnaker
+    kubernetesVersion: "1.10.4"
 - name: student-vm
   type: student-vm.jinja
   metadata:
