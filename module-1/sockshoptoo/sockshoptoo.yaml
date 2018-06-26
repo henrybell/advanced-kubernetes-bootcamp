@@ -4,7 +4,6 @@ metadata:
   name: carts-db
   labels:
     name: carts-db
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -45,7 +44,6 @@ metadata:
   labels:
     name: carts-db
     layer: data
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -60,7 +58,6 @@ metadata:
   name: carts
   labels:
     name: carts
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -105,7 +102,6 @@ metadata:
   labels:
     name: carts
     layer: service
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -120,7 +116,6 @@ metadata:
   name: catalogue-db
   labels:
     name: catalogue-db
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -150,7 +145,6 @@ metadata:
   labels:
     name: catalogue-db
     layer: data
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -165,7 +159,6 @@ metadata:
   name: catalogue
   labels:
     name: catalogue
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -198,7 +191,6 @@ metadata:
   labels:
     name: catalogue
     layer: service
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -211,7 +203,6 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: front-end
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -246,7 +237,6 @@ metadata:
   labels:
     name: front-end
     layer: ui
-  namespace: sock-shop-too
 spec:
   type: LoadBalancer
   ports:
@@ -261,7 +251,6 @@ metadata:
   name: orders-db
   labels:
     name: orders-db
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -302,7 +291,6 @@ metadata:
   labels:
     name: orders-db
     layer: data
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -317,7 +305,6 @@ metadata:
   name: orders
   labels:
     name: orders
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -362,7 +349,6 @@ metadata:
   labels:
     name: orders
     layer: service
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -377,7 +363,6 @@ metadata:
   name: payment
   labels:
     name: payment
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -410,7 +395,6 @@ metadata:
   labels:
     name: payment
     layer: service
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -425,7 +409,6 @@ metadata:
   name: queue-master
   labels:
     name: queue-master
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -451,7 +434,6 @@ metadata:
     layer: shipping
   annotations:
     prometheus.io/path: "/prometheus"
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -466,7 +448,6 @@ metadata:
   name: rabbitmq
   labels:
     name: rabbitmq
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -500,7 +481,6 @@ metadata:
   labels:
     name: rabbitmq
     layer: shipping
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -515,7 +495,6 @@ metadata:
   name: shipping
   labels:
     name: shipping
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -560,7 +539,6 @@ metadata:
   labels:
     name: shipping
     layer: shipping
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -575,7 +553,6 @@ metadata:
   name: user-db
   labels:
     name: user-db
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -616,7 +593,6 @@ metadata:
   labels:
     name: user-db
     layer: data
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
@@ -631,7 +607,6 @@ metadata:
   name: user
   labels:
     name: user
-  namespace: sock-shop-too
 spec:
   replicas: 1
   template:
@@ -667,7 +642,6 @@ metadata:
   labels:
     name: user
     layer: service
-  namespace: sock-shop-too
 spec:
   ports:
     # the port that this service should serve on
