@@ -10,7 +10,6 @@ spec:
     metadata:
       labels:
         name: carts-db
-        layer: data
     spec:
       containers:
       - name: carts-db
@@ -43,7 +42,6 @@ metadata:
   name: carts-db
   labels:
     name: carts-db
-    layer: data
 spec:
   ports:
     # the port that this service should serve on
@@ -64,7 +62,6 @@ spec:
     metadata:
       labels:
         name: carts
-        layer: service
     spec:
       containers:
       - name: carts
@@ -101,7 +98,6 @@ metadata:
   name: carts
   labels:
     name: carts
-    layer: service
 spec:
   ports:
     # the port that this service should serve on
@@ -122,7 +118,6 @@ spec:
     metadata:
       labels:
         name: catalogue-db
-        layer: data
     spec:
       containers:
       - name: catalogue-db
@@ -144,7 +139,6 @@ metadata:
   name: catalogue-db
   labels:
     name: catalogue-db
-    layer: data
 spec:
   ports:
     # the port that this service should serve on
@@ -165,7 +159,6 @@ spec:
     metadata:
       labels:
         name: catalogue
-        layer: service
     spec:
       containers:
       - name: catalogue
@@ -190,7 +183,6 @@ metadata:
   name: catalogue
   labels:
     name: catalogue
-    layer: service
 spec:
   ports:
     # the port that this service should serve on
@@ -209,7 +201,6 @@ spec:
     metadata:
       labels:
         name: front-end
-        layer: ui
     spec:
       containers:
       - name: front-end
@@ -236,7 +227,6 @@ metadata:
   name: front-end
   labels:
     name: front-end
-    layer: ui
 spec:
   type: LoadBalancer
   ports:
@@ -257,7 +247,6 @@ spec:
     metadata:
       labels:
         name: orders-db
-        layer: data
     spec:
       containers:
       - name: orders-db
@@ -290,7 +279,6 @@ metadata:
   name: orders-db
   labels:
     name: orders-db
-    layer: data
 spec:
   ports:
     # the port that this service should serve on
@@ -311,7 +299,6 @@ spec:
     metadata:
       labels:
         name: orders
-        layer: service
     spec:
       containers:
       - name: orders
@@ -348,7 +335,6 @@ metadata:
   name: orders
   labels:
     name: orders
-    layer: service
 spec:
   ports:
     # the port that this service should serve on
@@ -369,7 +355,6 @@ spec:
     metadata:
       labels:
         name: payment
-        layer: service
     spec:
       containers:
       - name: payment
@@ -394,7 +379,6 @@ metadata:
   name: payment
   labels:
     name: payment
-    layer: service
 spec:
   ports:
     # the port that this service should serve on
@@ -415,7 +399,6 @@ spec:
     metadata:
       labels:
         name: queue-master
-        layer: shipping
     spec:
       containers:
       - name: queue-master
@@ -431,7 +414,6 @@ metadata:
   name: queue-master
   labels:
     name: queue-master
-    layer: shipping
   annotations:
     prometheus.io/path: "/prometheus"
 spec:
@@ -454,7 +436,6 @@ spec:
     metadata:
       labels:
         name: rabbitmq
-        layer: shipping
     spec:
       containers:
       - name: rabbitmq
@@ -480,7 +461,6 @@ metadata:
   name: rabbitmq
   labels:
     name: rabbitmq
-    layer: shipping
 spec:
   ports:
     # the port that this service should serve on
@@ -501,7 +481,6 @@ spec:
     metadata:
       labels:
         name: shipping
-        layer: shipping
     spec:
       containers:
       - name: shipping
@@ -538,7 +517,6 @@ metadata:
   name: shipping
   labels:
     name: shipping
-    layer: shipping
 spec:
   ports:
     # the port that this service should serve on
@@ -559,7 +537,6 @@ spec:
     metadata:
       labels:
         name: user-db
-        layer: data
     spec:
       containers:
       - name: user-db
@@ -592,7 +569,6 @@ metadata:
   name: user-db
   labels:
     name: user-db
-    layer: data
 spec:
   ports:
     # the port that this service should serve on
@@ -613,7 +589,6 @@ spec:
     metadata:
       labels:
         name: user
-        layer: service
     spec:
       containers:
       - name: user
@@ -641,7 +616,6 @@ metadata:
   name: user
   labels:
     name: user
-    layer: service
 spec:
   ports:
     # the port that this service should serve on

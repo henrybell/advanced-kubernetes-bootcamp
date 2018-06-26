@@ -1,0 +1,9 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: sock-shop-dev
+  name: dev-viewer
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods", "replicasets", "deployments", "services", "endpoints", "ingresses", "configmaps", "secrets"]
+  verbs: ["get", "watch", "list"]
