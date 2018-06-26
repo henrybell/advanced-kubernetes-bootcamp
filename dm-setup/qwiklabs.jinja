@@ -35,10 +35,10 @@ resources:
     serviceName: clouderrorreporting.googleapis.com
 - name: iam
   type: iam.jinja
-- name: west
+- name: central
   type: cluster.jinja
   properties:
-    location: us-west1-c
+    location: us-central1-f
     purpose: workloads
     apiVersion: v1beta1
     kubernetesVersion: "1.10"
@@ -57,7 +57,7 @@ resources:
 - name: spinnaker
   type: cluster.jinja
   properties:
-    zone: us-west1-b
+    zone: us-central1-f
     purpose: spinnaker
 - name: student-vm
   type: student-vm.jinja
@@ -65,6 +65,13 @@ resources:
     dependsOn:
     - iam
     - east
-    - west
+    - central
   properties:
-    zone: us-west1-b
+    zone: us-central1-f
+- name: student-vm-waiter
+  type: waiter.jinja
+  properties:
+    timeout: 600s
+  metadata:
+    dependsOn:
+    - student-vm

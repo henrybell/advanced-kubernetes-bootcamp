@@ -16,3 +16,4 @@ imports:
 - path: student-vm.jinja
 - path: iam.jinja
 - path: cluster.jinja
+- path: waiter.jinja

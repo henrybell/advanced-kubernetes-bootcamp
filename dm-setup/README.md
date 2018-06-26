@@ -15,8 +15,8 @@ the bootcamp resources (clusters, service accounts, etc):
     export PROJECT=$(gcloud config get-value project)
     export PROJECT_ID=$(gcloud projects list --filter id=${PROJECT} --format 'value(projectNumber)')
     export DM_SA_EMAIL=${PROJECT_ID}@cloudservices.gserviceaccount.com
+    gcloud services enable deploymentmanager.googleapis.com runtimeconfig.googleapis.com
     gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:${DM_SA_EMAIL} --role roles/owner
-    gcloud services enable deploymentmanager.googleapis.com
 
 ## Create Deployment
 
