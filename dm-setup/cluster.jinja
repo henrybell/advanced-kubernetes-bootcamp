@@ -31,6 +31,8 @@ resources:
     {% endif %}
     cluster:
       name: {{ CLUSTER_NAME }}
+      network: {{ properties["network"] }}
+      subnetwork: {{ properties["subnetwork"] }}
       initialNodeCount: {{ properties['initialNodeCount'] }}
       initialClusterVersion: "{{ properties['kubernetesVersion'] }}"
       {% if properties["monitoringService"] %}

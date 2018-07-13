@@ -34,7 +34,6 @@ resources:
 
 - type: runtimeconfig.v1beta1.waiter
   name: {{ waiterName }}
-  metadata:
   properties:
     # By using a reference to the config resource, this Waiter becomes dependent
     # on the resource and Deployment Manager won't create it until after the config
