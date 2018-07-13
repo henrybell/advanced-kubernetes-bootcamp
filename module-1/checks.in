@@ -1,4 +1,3 @@
-M,False,legacyAbac.enabled,Legacy ABAC enabled
 M,True,addonsConfig.kubernetesDashboard.disabled,kubernetes dashboard disabled
 M,True,masterAuthorizedNetworksConfig.enabled,master authorized network enabled
 E,-,masterAuth.username,no master auth user
