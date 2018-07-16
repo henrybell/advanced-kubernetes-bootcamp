@@ -35,40 +35,84 @@ resources:
     serviceName: clouderrorreporting.googleapis.com
 - name: iam
   type: iam.jinja
+- type: compute.v1.network
+  name: {{ env['deployment'] }}-network
+  properties:
+    autoCreateSubnetworks: true
+- type: compute.v1.route
+  name: {{ env["deployment"] }}-default-route
+  properties:
+    network: $(ref.{{ env['deployment'] }}-network.selfLink)
+    nextHopGateway: projects/{{ env['project'] }}/global/gateways/default-internet-gateway
+    priority: 1000
+    destRange: 0.0.0.0/0
 - name: central
   type: cluster.jinja
   properties:
     location: us-central1-f
+    network: {{ env['deployment'] }}-network
+    subnetwork: {{ env['deployment'] }}-network
     purpose: workloads
     apiVersion: v1beta1
     kubernetesVersion: "1.10.4"
     monitoringService: monitoring.googleapis.com/kubernetes
     loggingService: logging.googleapis.com/kubernetes
     sockShop: "installed"
+  metadata:
+    dependsOn:
+    - {{ env['deployment'] }}-network
 - name: east
   type: cluster.jinja
   properties:
     location: us-east4-b
+    network: {{ env['deployment'] }}-network
+    subnetwork: {{ env['deployment'] }}-network
     purpose: workloads
     apiVersion: v1beta1
     kubernetesVersion: "1.10.4"
     monitoringService: monitoring.googleapis.com/kubernetes
     loggingService: logging.googleapis.com/kubernetes
+  metadata:
+    dependsOn:
+    - {{ env['deployment'] }}-network
 - name: spinnaker
   type: cluster.jinja
   properties:
-    zone: us-central1-f
+    network: {{ env['deployment'] }}-network
+    subnetwork: {{ env['deployment'] }}-network
+    location: us-central1-f
     purpose: spinnaker
     kubernetesVersion: "1.10.4"
+  metadata:
+    dependsOn:
+    - {{ env['deployment'] }}-network
+- type: compute.v1.firewall
+  name: {{ env['deployment'] }}-student-ssh
+  metadata:
+    dependsOn:
+    - {{ env['deployment'] }}-network
+  properties:
+    network: projects/{{ env["project"] }}/global/networks/{{ env['deployment'] }}-network
+    sourceRanges:
+    - "0.0.0.0/0"
+    targetTags:
+    - student-vm
+    allowed:
+    - IPProtocol: tcp
+      ports:
+      - "22"
 - name: student-vm
   type: student-vm.jinja
   metadata:
     dependsOn:
     - iam
+    - {{ env['deployment'] }}-network
     - east
     - central
+    - spinnaker
   properties:
     zone: us-central1-f
+    network: {{ env['deployment'] }}-network
 - name: student-vm-waiter
   type: waiter.jinja
   properties:
