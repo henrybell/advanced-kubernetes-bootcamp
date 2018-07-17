@@ -88,11 +88,8 @@ resources:
     - {{ env['deployment'] }}-network
 - type: compute.v1.firewall
   name: {{ env['deployment'] }}-student-ssh
-  metadata:
-    dependsOn:
-    - {{ env['deployment'] }}-network
   properties:
-    network: projects/{{ env["project"] }}/global/networks/{{ env['deployment'] }}-network
+    network: $(ref.{{ env['deployment'] }}-network.selfLink)
     sourceRanges:
     - "0.0.0.0/0"
     targetTags:
@@ -112,7 +109,7 @@ resources:
     - spinnaker
   properties:
     zone: us-central1-f
-    network: {{ env['deployment'] }}-network
+    network: $(ref.{{ env['deployment'] }}-network.selfLink)
 - name: student-vm-waiter
   type: waiter.jinja
   properties:
