@@ -103,7 +103,7 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     kubectl apply -f tiller-rbac.yaml
     helm init --service-account tiller
     # Wait for tiller to be running
-    sleep 60
+    until timeout 10 helm version; do sleep 10; done
 
     # Install Istio
     ISTIO_VERSION=0.8.0
@@ -136,7 +136,7 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     kubectl apply -f tiller-rbac.yaml
     helm init --service-account tiller
     # Wait for tiller to be running
-    sleep 60
+    until timeout 10 helm version; do sleep 10; done
 
     # Create Spinnaker service account and assign it storage.admin role.
     gcloud iam service-accounts create spinnaker-sa-${DEPLOYMENT_NAME} --display-name spinnaker-sa-${DEPLOYMENT_NAME}
