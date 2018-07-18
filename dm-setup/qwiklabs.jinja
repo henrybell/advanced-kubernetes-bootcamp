@@ -62,8 +62,8 @@ resources:
   type: cluster.jinja
   properties:
     location: us-central1-f
-    network: {{ env['deployment'] }}-network
-    subnetwork: {{ env['deployment'] }}-us-central1
+    network: $(ref.{{ env['deployment'] }}-network.name)
+    subnetwork: $(ref.{{ env['deployment'] }}-us-central1.name)
     purpose: workloads
     apiVersion: v1beta1
     kubernetesVersion: "1.10.4"
@@ -77,8 +77,8 @@ resources:
   type: cluster.jinja
   properties:
     location: us-east4-b
-    network: {{ env['deployment'] }}-network
-    subnetwork: {{ env['deployment'] }}-us-east4
+    network: $(ref.{{ env['deployment'] }}-network.name)
+    subnetwork: $(ref.{{ env['deployment'] }}-us-east4.name)
     purpose: workloads
     apiVersion: v1beta1
     kubernetesVersion: "1.10.4"
@@ -90,8 +90,8 @@ resources:
 - name: spinnaker
   type: cluster.jinja
   properties:
-    network: {{ env['deployment'] }}-network
-    subnetwork: {{ env['deployment'] }}-us-central1
+    network: $(ref.{{ env['deployment'] }}-network.name)
+    subnetwork: $(ref.{{ env['deployment'] }}-us-central1.name)
     zone: us-central1-f
     purpose: spinnaker
     kubernetesVersion: "1.10.4"
