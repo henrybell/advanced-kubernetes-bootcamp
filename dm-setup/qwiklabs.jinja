@@ -38,7 +38,19 @@ resources:
 - type: compute.v1.network
   name: {{ env['deployment'] }}-network
   properties:
-    autoCreateSubnetworks: true
+    autoCreateSubnetworks: false
+- type: compute.v1.subnetworks
+  name: {{ env['deployment'] }}-us-central1
+  properties:
+    network: $(ref.{{ env['deployment'] }}-network.selfLink)
+    region: us-central1
+    ipCidrRange: 10.128.0.0/20
+- type: compute.v1.subnetworks
+  name: {{ env['deployment'] }}-us-east4
+  properties:
+    network: $(ref.{{ env['deployment'] }}-network.selfLink)
+    region: us-east4
+    ipCidrRange: 10.132.0.0/20
 - type: compute.v1.route
   name: {{ env["deployment"] }}-default-route
   properties:
@@ -50,8 +62,8 @@ resources:
   type: cluster.jinja
   properties:
     location: us-central1-f
-    network: {{ env['deployment'] }}-network
-    subnetwork: {{ env['deployment'] }}-network
+    network: $(ref.{{ env['deployment'] }}-network.name)
+    subnetwork: $(ref.{{ env['deployment'] }}-us-central1.name)
     purpose: workloads
     apiVersion: v1beta1
     kubernetesVersion: "1.10.4"
@@ -60,13 +72,13 @@ resources:
     sockShop: "installed"
   metadata:
     dependsOn:
-    - {{ env['deployment'] }}-network
+    - {{ env['deployment'] }}-us-central1
 - name: east
   type: cluster.jinja
   properties:
     location: us-east4-b
-    network: {{ env['deployment'] }}-network
-    subnetwork: {{ env['deployment'] }}-network
+    network: $(ref.{{ env['deployment'] }}-network.name)
+    subnetwork: $(ref.{{ env['deployment'] }}-us-east4.name)
     purpose: workloads
     apiVersion: v1beta1
     kubernetesVersion: "1.10.4"
@@ -74,18 +86,18 @@ resources:
     loggingService: logging.googleapis.com/kubernetes
   metadata:
     dependsOn:
-    - {{ env['deployment'] }}-network
+    - {{ env['deployment'] }}-us-east4
 - name: spinnaker
   type: cluster.jinja
   properties:
-    network: {{ env['deployment'] }}-network
-    subnetwork: {{ env['deployment'] }}-network
-    location: us-central1-f
+    network: $(ref.{{ env['deployment'] }}-network.name)
+    subnetwork: $(ref.{{ env['deployment'] }}-us-central1.name)
+    zone: us-central1-f
     purpose: spinnaker
     kubernetesVersion: "1.10.4"
   metadata:
     dependsOn:
-    - {{ env['deployment'] }}-network
+    - {{ env['deployment'] }}-us-central1
 - type: compute.v1.firewall
   name: {{ env['deployment'] }}-student-ssh
   properties:
@@ -103,13 +115,14 @@ resources:
   metadata:
     dependsOn:
     - iam
-    - {{ env['deployment'] }}-network
+    - {{ env['deployment'] }}-us-central1
     - east
     - central
     - spinnaker
   properties:
     zone: us-central1-f
     network: $(ref.{{ env['deployment'] }}-network.selfLink)
+    subnetwork: $(ref.{{ env['deployment'] }}-us-central1.selfLink)
 - name: student-vm-waiter
   type: waiter.jinja
   properties:

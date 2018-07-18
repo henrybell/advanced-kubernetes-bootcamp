@@ -32,6 +32,7 @@ resources:
         sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-9
     networkInterfaces:
     - network: {{ properties["network"] }}
+      subnetwork: {{ properties["subnetwork"] }}
       # Access Config required to give the instance a public IP address
       accessConfigs:
       - name: External NAT
