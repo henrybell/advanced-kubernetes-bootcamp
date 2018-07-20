@@ -120,7 +120,7 @@ resources:
     - central
     - spinnaker
   properties:
-    zone: us-central1-f
+    zone: us-west1-a
     network: $(ref.{{ env['deployment'] }}-network.selfLink)
     subnetwork: $(ref.{{ env['deployment'] }}-us-central1.selfLink)
 - name: student-vm-waiter
