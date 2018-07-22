@@ -8,7 +8,7 @@ metadata_value() {
 DEPLOYMENT_NAME=`metadata_value "instance/attributes/deployment"`
 
 apt-get update
-apt-get install -y git kubectl
+apt-get install -y git kubectl psmisc
 
 # Add Bash completion for gcloud
 echo 'source /usr/share/google-cloud-sdk/completion.bash.inc' >> /etc/profile
