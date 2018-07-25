@@ -76,7 +76,7 @@ resources:
 - name: east
   type: cluster.jinja
   properties:
-    location: us-east4-b
+    location: us-east4-c
     network: $(ref.{{ env['deployment'] }}-network.name)
     subnetwork: $(ref.{{ env['deployment'] }}-us-east4.name)
     purpose: workloads
