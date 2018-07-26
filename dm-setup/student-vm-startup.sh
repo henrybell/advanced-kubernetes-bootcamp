@@ -168,7 +168,7 @@ kubeConfig:
   secretKey: config
   contexts:
   - gke_${PROJECT}_us-central1-f_${DEPLOYMENT_NAME}-central
-  - gke_${PROJECT}_us-east4-b_${DEPLOYMENT_NAME}-east
+  - gke_${PROJECT}_us-east4-c_${DEPLOYMENT_NAME}-east
 gcs:
   enabled: true
   project: ${PROJECT}
