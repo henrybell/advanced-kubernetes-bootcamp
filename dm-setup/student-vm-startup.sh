@@ -106,7 +106,7 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     until timeout 10 helm version; do sleep 10; done
 
     # Install Istio
-    ISTIO_VERSION=0.8.0
+    export ISTIO_VERSION=0.8.0
     curl -L https://git.io/getLatestIstio | sh -
     pushd istio-${ISTIO_VERSION}/
     helm install -n istio --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
