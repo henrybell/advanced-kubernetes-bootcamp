@@ -166,14 +166,14 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
 	export JSON=$(cat $HOME/spinnaker-key.json)
 
 	cat > $HOME/spinconfig.yaml <<EOF
-	minio:
-  	  enabled: false
-	gcs:
-  	  enabled: true
-  	  project: $PROJECT
-  	  bucket: "$BUCKET"
-  	  jsonKey: '$JSON'
-	EOF
+minio:
+  enabled: false
+gcs:
+  enabled: true
+  project: $PROJECT
+  bucket: "$BUCKET"
+  jsonKey: '$JSON'
+EOF
 
     # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
     # git clone https://github.com/viglesiasce/charts -b mcs
