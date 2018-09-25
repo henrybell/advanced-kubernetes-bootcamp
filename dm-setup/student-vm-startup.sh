@@ -196,7 +196,6 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
 	export PROJECT=$(gcloud info --format='value(config.project)')
 	export GCR_SUB=my-gcr-sub
 	export GCR_TOPIC="projects/${PROJECT}/topics/gcr"
-	gcloud pubsub topics create projects/${PROJECT}/topics/gcr
 	gcloud beta pubsub subscriptions create $GCR_SUB --topic $GCR_TOPIC
 
 	# Create PubSub topic for GCS
