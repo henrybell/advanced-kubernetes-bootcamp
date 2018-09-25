@@ -74,6 +74,21 @@ export VAR="PS1='[\W \$(kube_ps1)]\$ '"
 echo $VAR >> ~/.bashrc
 source $HOME/.bashrc
 
+# Create application frontend
+git clone https://github.com/ameer00/advanced-kubernetes-bootcamp-1.git ~/advanced-kubernetes-bootcamp 
+cd $HOME/advanced-kubernetes-bootcamp/module-2/services/frontend
+export PROJECT=$(gcloud info --format='value(config.project)')
+gcloud builds submit -q --tag gcr.io/$PROJECT/frontend .
+cd $HOME
+
+
+# Create application backend
+cd $HOME/advanced-kubernetes-bootcamp/module-2/services/backend
+export PROJECT=$(gcloud info --format='value(config.project)')
+gcloud builds submit -q --tag gcr.io/$PROJECT/backend .
+cd $HOME
+
+
 # Prometheus resources to install in the clusters
 wget -O prom-rbac.yml https://storage.googleapis.com/stackdriver-prometheus-documentation/rbac-setup.yml
 wget https://storage.googleapis.com/stackdriver-prometheus-documentation/prometheus-service.yml
@@ -159,11 +174,39 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     gcloud projects add-iam-policy-binding ${PROJECT} --role roles/owner --member serviceAccount:${SPINNAKER_SA_EMAIL}
     gcloud iam service-accounts keys create spinnaker-key.json --iam-account ${SPINNAKER_SA_EMAIL}
     export BUCKET=${PROJECT}-${DEPLOYMENT_NAME}
+    export BUCKET_CONFIG=${PROJECT}-spinnaker
     gsutil mb -c regional -l us-central1 gs://${BUCKET}
+    gsutil mb -c regional -l us-central1 gs://${BUCKET_CONFIG}
     
     # Setup Spinnaker GCS bucket
 	export PROJECT=$(gcloud info --format='value(config.project)')
 	export JSON=$(cat $HOME/spinnaker-key.json)
+	
+	# Store application manifests in GCS bucket
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	sed -e s/PROJECT_ID/$PROJECT/g $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/frontend.yml | gsutil cp - gs://$PROJECT-spinnaker/manifests/frontend.yml
+	sed -e s/PROJECT_ID/$PROJECT/g $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/backend.yml | gsutil cp - gs://$PROJECT-spinnaker/manifests/backend.yml
+
+
+	# Make GCR repo public for all users
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	gsutil iam ch allUsers:objectViewer gs://artifacts.$PROJECT.appspot.com
+	
+	# Create PubSub topic for GCR
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	export GCR_SUB=my-gcr-sub
+	export GCR_TOPIC="projects/${PROJECT}/topics/gcr"
+	gcloud pubsub topics create projects/${PROJECT}/topics/gcr
+	gcloud beta pubsub subscriptions create $GCR_SUB --topic $GCR_TOPIC
+
+	# Create PubSub topic for GCS
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	export GCS_SUB=my-gcs-sub
+	export GCS_TOPIC=spin-gcs-topic
+	export BUCKET=$PROJECT-spinnaker
+	gcloud beta pubsub topics create $GCS_TOPIC
+	gcloud beta pubsub subscriptions create $GCS_SUB --topic $GCS_TOPIC
+	gsutil notification create -t $GCS_TOPIC -f json gs://${BUCKET}
 
 	cat > $HOME/spinconfig.yaml <<EOF
 minio:
