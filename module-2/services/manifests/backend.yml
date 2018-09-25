@@ -1,0 +1,59 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: '${ namespace }'
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: 'backend-${ canary ? "canary" : "primary" }'
+  namespace: '${ namespace }'
+  labels:
+    app: backend
+    version: '${ canary ? "canary" : "production" }'
+    stack: backend
+    tier: '${ namespace }'
+    canary: '${ canary ? "true" : "false" }'
+spec:
+  replicas: '${ #toInt( canary ? 1 : 5 ) }'
+  selector:
+    matchLabels:
+      app: backend
+      version: '${ canary ? "canary" : "production" }'
+      stack: backend
+      tier: '${ namespace }'
+      canary: '${ canary ? "true" : "false" }'
+  template:
+    metadata:
+      labels:
+        app: backend
+        version: '${ canary ? "canary" : "production" }'        
+        stack: backend
+        tier: '${ namespace }'
+        canary: '${ canary ? "true" : "false" }'
+    spec:
+      containers:
+      - name: primary
+        image: gcr.io/PROJECT_ID/backend
+        ports:
+        - containerPort: 8000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+  labels:
+    app: backend
+    tier: '${ namespace }'
+  namespace: '${ namespace }'
+spec:
+  selector:
+    app: backend
+    stack: backend
+    tier: '${ namespace }'
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 8000

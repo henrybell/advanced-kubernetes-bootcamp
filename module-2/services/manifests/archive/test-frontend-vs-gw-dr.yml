@@ -1,0 +1,52 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: myapp-gateway
+  namespace: production
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: myapp
+  namespace: production
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - myapp-gateway
+  http:
+  - route:
+    - destination:
+        host: frontend
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: frontend
+  namespace: production
+spec:
+  host: frontend
+  subsets:
+  - name: canary
+    labels:
+      canary: "true"
+  - name: production
+    labels:
+      canary: "false"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: ROUND_ROBIN

@@ -1,0 +1,366 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: staging
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+data:
+  BACKEND_ENDPOINT: 'http://backend.staging'
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: frontend-primary
+  namespace: staging
+  labels:
+    app: frontend
+    version: production
+    stack: frontend
+    tier: staging
+    canary: "false"
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"frontend"'
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: frontend
+      version: production
+      stack: frontend
+      tier: staging
+      canary: "false"
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: production
+        stack: frontend
+        tier: staging
+        canary: "false"
+      annotations:
+        moniker.spinnaker.io/application: '"myapp"'
+        moniker.spinnaker.io/cluster: '"frontend"'
+    spec:
+      containers:
+      - name: primary
+        image: gcr.io/PROJECT_ID/frontend
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: frontend-config
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+    tier: staging
+  namespace: staging
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"frontend"'
+spec:
+  selector:
+    app: frontend
+    stack: frontend
+    tier: staging
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 8000
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: backend-primary
+  namespace: staging
+  labels:
+    app: backend
+    version: production
+    stack: backend
+    tier: staging
+    canary: "false"
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"backend"'
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: backend
+      version: production
+      stack: backend
+      tier: staging
+      canary: "false"
+  template:
+    metadata:
+      labels:
+        app: backend
+        version: production
+        stack: backend
+        tier: staging
+        canary: "false"
+      annotations:
+        moniker.spinnaker.io/application: '"myapp"'
+        moniker.spinnaker.io/cluster: '"backend"'
+    spec:
+      containers:
+      - name: primary
+        image: gcr.io/PROJECT_ID/backend
+        ports:
+        - containerPort: 8000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+  labels:
+    app: backend
+    tier: staging
+  namespace: staging
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"backend"'
+spec:
+  selector:
+    app: backend
+    stack: backend
+    tier: staging
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 8000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: production
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+data:
+  BACKEND_ENDPOINT: 'http://backend.production'
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: frontend-primary
+  namespace: production
+  labels:
+    app: frontend
+    version: production
+    stack: frontend
+    tier: production
+    canary: "false"
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"frontend"'
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: frontend
+      version: production
+      stack: frontend
+      tier: production
+      canary: "false"
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: production
+        stack: frontend
+        tier: production
+        canary: "false"
+      annotations:
+        moniker.spinnaker.io/application: '"myapp"'
+        moniker.spinnaker.io/cluster: '"frontend"'
+    spec:
+      containers:
+      - name: primary
+        image: gcr.io/PROJECT_ID/frontend
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: frontend-config
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+    tier: production
+  namespace: production
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"frontend"'
+spec:
+  selector:
+    app: frontend
+    stack: frontend
+    tier: production
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 8000
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: backend-primary
+  namespace: production
+  labels:
+    app: backend
+    version: production
+    stack: backend
+    tier: production
+    canary: "false"
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"backend"'
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: backend
+      version: production
+      stack: backend
+      tier: production
+      canary: "false"
+  template:
+    metadata:
+      labels:
+        app: backend
+        version: production
+        stack: backend
+        tier: production
+        canary: "false"
+      annotations:
+        moniker.spinnaker.io/application: '"myapp"'
+        moniker.spinnaker.io/cluster: '"backend"'
+    spec:
+      containers:
+      - name: primary
+        image: gcr.io/PROJECT_ID/backend
+        ports:
+        - containerPort: 8000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+  labels:
+    app: backend
+    tier: production
+  namespace: production
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+    moniker.spinnaker.io/cluster: '"backend"'
+spec:
+  selector:
+    app: backend
+    stack: backend
+    tier: production
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 8000
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: frontend-gateway
+  namespace: production
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: frontend
+  namespace: production
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - frontend-gateway
+  http:
+  - route:
+    - destination:
+        host: frontend
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: frontend
+  namespace: production
+spec:
+  host: frontend
+  subsets:
+  - name: canary
+    labels:
+      version: canary
+  - name: production
+    labels:
+      version: production
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: ROUND_ROBIN
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: backend
+  namespace: production
+spec:
+  hosts:
+    - backend
+  http:
+  - route:
+    - destination:
+        host: backend
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: backend
+  namespace: production
+spec:
+  host: backend
+  subsets:
+  - name: canary
+    labels:
+      version: canary
+  - name: production
+    labels:
+      version: production
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: ROUND_ROBIN

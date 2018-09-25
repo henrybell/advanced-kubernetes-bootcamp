@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: backend-deploy-dev
+  namespace: dev
+  labels:
+    app: backend
+    version: dev
+    stack: backend
+    tier: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+      version: dev
+      stack: backend
+      tier: dev
+  template:
+    metadata:
+      labels:
+        app: backend
+        version: dev
+        stack: backend
+        tier: dev
+    spec:
+      containers:
+      - name: primary-dev
+        image: gcr.io/PROJECT_ID/backend-dev
+        ports:
+        - containerPort: 8000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend-svc-dev
+  labels:
+    app: backend
+    tier: dev
+  namespace: dev
+spec:
+  selector:
+    app: backend
+    stack: backend
+    tier: dev
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 8000
+---
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend-svc-dev
+  labels:
+    app: frontend-svc-dev
+    tier: dev
+  namespace: dev
+spec:
+  selector:
+    app: frontend
+    stack: frontend
+    tier: dev
+  ports:
+  - protocol: TCP
+    port: 80
+    name: http
+    targetPort: 8000
+  type: LoadBalancer

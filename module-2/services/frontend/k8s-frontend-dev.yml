@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config-dev
+  namespace: dev
+data:
+  BACKEND_ENDPOINT: 'http://backend-svc-dev.dev'
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: frontend-deploy-dev
+  namespace: dev
+  labels:
+    app: frontend
+    version: dev
+    stack: frontend
+    tier: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+      version: dev
+      stack: frontend
+      tier: dev
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: dev
+        stack: frontend
+        tier: dev
+    spec:
+      containers:
+      - name: primary-dev
+        image: gcr.io/PROJECT_ID/frontend-dev
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: frontend-config-dev

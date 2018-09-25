@@ -1,0 +1,92 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: backend
+  namespace: production
+spec:
+  hosts:
+  - backend
+  http:
+  - route:
+    - destination:
+        host: backend
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: backend
+  namespace: production
+spec:
+  host: backend
+  subsets:
+  - name: canary
+    labels:
+      canary: "true"
+  - name: production
+    labels:
+      canary: "false"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: frontend-staging
+  namespace: staging
+spec:
+  hosts:
+  - frontend
+  http:
+  - route:
+    - destination:
+        host: frontend
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: frontend-staging
+  namespace: staging
+spec:
+  host: frontend
+  subsets:
+  - name: canary
+    labels:
+      canary: "true"
+  - name: production
+    labels:
+      canary: "false"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: backend-staging
+  namespace: staging
+spec:
+  hosts:
+  - backend
+  http:
+  - route:
+    - destination:
+        host: backend
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: backend-staging
+  namespace: staging
+spec:
+  host: backend
+  subsets:
+  - name: canary
+    labels:
+      canary: "true"
+  - name: production
+    labels:
+      canary: "false"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL

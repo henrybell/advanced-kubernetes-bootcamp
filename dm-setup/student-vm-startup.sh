@@ -58,9 +58,17 @@ EOF
 git clone https://github.com/ahmetb/kubectx
 cp kubectx/kube* /usr/local/bin
 
+# Install kubectl aliases
+cd $HOME
+git clone https://github.com/ahmetb/kubectl-aliases.git
+echo "[ -f ~/kubectl-aliases/.kubectl_aliases ] && source ~/kubectl-aliases/.kubectl_aliases" >> $HOME/.bashrc
+source ~/.bashrc
+
+
 # Install kube ps1
 cd $HOME
 git clone https://github.com/jonmosco/kube-ps1.git
+echo 'export KUBE_PS1_SYMBOL_ENABLE=false' >> ~/.bashrc
 echo 'source $HOME/kube-ps1/kube-ps1.sh' >> ~/.bashrc
 export VAR="PS1='[\W \$(kube_ps1)]\$ '"
 echo $VAR >> ~/.bashrc
@@ -106,10 +114,11 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     until timeout 10 helm version; do sleep 10; done
 
     # Install Istio
-    export ISTIO_VERSION=0.8.0
+    export ISTIO_VERSION=1.0.2
     curl -L https://git.io/getLatestIstio | sh -
     pushd istio-${ISTIO_VERSION}/
-    helm install -n istio --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
+    helm install -n istio --namespace=istio-system install/kubernetes/helm/istio --set kiali.enabled=true --set tracing.enabled=true --set global.mtls.enabled=true --set grafana.enabled=true --set servicegraph.enabled=true
+    export PATH=$PATH:$HOME/istio-$ISTIO_VERSION/bin
     popd
     kubectl label namespace default istio-injection=enabled
 done
@@ -138,7 +147,7 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     # Wait for tiller to be running
     until timeout 10 helm version; do sleep 10; done
 
-    # Create Spinnaker service account and assign it storage.admin role.
+    # Create Spinnaker service account and assign it roles/owner role.
     gcloud iam service-accounts create spinnaker-sa-${DEPLOYMENT_NAME} --display-name spinnaker-sa-${DEPLOYMENT_NAME}
     export SPINNAKER_SA_EMAIL=$(gcloud iam service-accounts list \
         --filter="displayName:spinnaker-sa-${DEPLOYMENT_NAME}" \
@@ -146,10 +155,24 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     export PROJECT=$(gcloud info --format='value(config.project)')
 
     # Move this to DM template
-    gcloud projects add-iam-policy-binding ${PROJECT} --role roles/storage.admin --member serviceAccount:${SPINNAKER_SA_EMAIL}
+    gcloud projects add-iam-policy-binding ${PROJECT} --role roles/owner --member serviceAccount:${SPINNAKER_SA_EMAIL}
     gcloud iam service-accounts keys create spinnaker-key.json --iam-account ${SPINNAKER_SA_EMAIL}
     export BUCKET=${PROJECT}-${DEPLOYMENT_NAME}
     gsutil mb -c regional -l us-central1 gs://${BUCKET}
+    
+    # Setup Spinnaker GCS bucket
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	export JSON=$(cat $HOME/spinnaker-key.json)
+
+	cat > $HOME/spinconfig.yaml <<EOF
+	minio:
+  	  enabled: false
+	gcs:
+  	  enabled: true
+  	  project: $PROJECT
+  	  bucket: "$BUCKET"
+  	  jsonKey: '$JSON'
+	EOF
 
     # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
     # git clone https://github.com/viglesiasce/charts -b mcs
@@ -190,7 +213,7 @@ accounts:
   password: '${SA_JSON}'
   email: 1234@5678.com
 EOF
-    helm install -n adv-k8s stable/spinnaker -f spinnaker-config.yaml --timeout 600 --version 0.5.0
+    helm install -n adv-k8s stable/spinnaker -f $HOME/spinconfig.yaml --timeout 600
 done
 
 # Signal completion to waiter
