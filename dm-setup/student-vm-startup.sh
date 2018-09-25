@@ -75,7 +75,7 @@ echo $VAR >> ~/.bashrc
 source $HOME/.bashrc
 
 # Create application frontend
-git clone https://github.com/ameer00/advanced-kubernetes-bootcamp-1.git ~/advanced-kubernetes-bootcamp 
+git clone https://github.com/ameer00/advanced-kubernetes-bootcamp-1.git ~/advanced-kubernetes-bootcamp   # CHANGE THIS TO MASTER ONCE MERGED
 cd $HOME/advanced-kubernetes-bootcamp/module-2/services/frontend
 export PROJECT=$(gcloud info --format='value(config.project)')
 gcloud builds submit -q --tag gcr.io/$PROJECT/frontend .
@@ -223,8 +223,49 @@ gcs:
   bucket: "$BUCKET"
   jsonKey: '$JSON'
 EOF
-
+	
+	# Install Spinnaker 
     helm install -n adv-k8s stable/spinnaker -f $HOME/spinconfig.yaml --timeout 600
+    
+    # Create SA token user for gke-sinnaker
+    kubectl apply -f $HOME/advanced-kubernetes-bootcamp/module-2/spinnaker/sa.yaml
+    kubectl config set-credentials ${CLUSTER_INFO_ARRAY[0]}-token-user --token $(kubectl get secret $(kubectl get serviceaccount spinnaker-service-account -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+	kubectl config set-context gke-${CLUSTER_INFO_ARRAY[1]:3:-3} --user ${CLUSTER_INFO_ARRAY[0]}-token-user
+	
+	# Copy spinnaker service account key to Halyard
+    kubectl cp $HOME/spinnaker-key.json default/adv-k8s-spinnaker-halyard-0:/home/spinnaker/.
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    echo $PROJECT > $HOME/project.txt
+    kubectl cp $HOME/project.txt default/adv-k8s-spinnaker-halyard-0:/home/spinnaker/.
+    
+    # Copy kubeconfig to halyard with the token-user contexts for all three clusters
+	kubectl cp $HOME/.kube/config default/adv-k8s-spinnaker-halyard-0:/home/spinnaker/.kube/.    
+	
+	# Configure spinnaker via halyard
+	## Set context to gke-spinnaker
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "kubectl config use-context gke-spinnaker"
+	
+	## Config gke clusters
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider kubernetes account add gke-central --provider-version v2 --context gke-central"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider kubernetes account add gke-east --provider-version v2 --context gke-east"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config features edit --artifacts true"
+	
+	## Configure GCS
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config artifact gcs account add spinnaker-service-account --json-path /home/spinnaker/spinnaker-key.json"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config artifact gcs enable"
+	
+	## Configure GCR.io
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider docker-registry enable"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider docker-registry account add gcr-registry --address gcr.io --username _json_key --password-file /home/spinnaker/spinnaker-key.json"
+	
+	## Configure pubsub
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config pubsub google enable"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config pubsub google subscription add gcr-google-pubsub --subscription-name my-gcr-sub --json-path /home/spinnaker/spinnaker-key.json --project $(cat ~/project.txt) --message-format GCR"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config pubsub google subscription add gcs-google-pubsub --subscription-name my-gcs-sub --json-path /home/spinnaker/spinnaker-key.json --project $(cat ~/project.txt) --message-format GCS"
+
+	## Apply new config
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal deploy apply"
+	
 done
 
 # Signal completion to waiter
