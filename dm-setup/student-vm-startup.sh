@@ -117,6 +117,7 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     export ISTIO_VERSION=1.0.2
     curl -L https://git.io/getLatestIstio | sh -
     pushd istio-${ISTIO_VERSION}/
+    kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
     helm install -n istio --namespace=istio-system install/kubernetes/helm/istio --set kiali.enabled=true --set tracing.enabled=true --set global.mtls.enabled=true --set grafana.enabled=true --set servicegraph.enabled=true
     export PATH=$PATH:$HOME/istio-$ISTIO_VERSION/bin
     popd
