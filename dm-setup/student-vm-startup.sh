@@ -175,45 +175,6 @@ gcs:
   jsonKey: '$JSON'
 EOF
 
-    # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
-    # git clone https://github.com/viglesiasce/charts -b mcs
-    # pushd charts/stable/spinnaker
-    # helm dep build
-    # popd
-
-    kubectl create secret generic --from-file=config=${HOME}/.kube/config my-kubeconfig
-
-    export SA_JSON=$(cat spinnaker-key.json)
-    cat > spinnaker-config.yaml <<EOF
-storageBucket: ${BUCKET}
-kubeConfig:
-  enabled: true
-  secretName: my-kubeconfig
-  secretKey: config
-  contexts:
-  - gke_${PROJECT}_us-central1-f_${DEPLOYMENT_NAME}-central
-  - gke_${PROJECT}_us-east4-c_${DEPLOYMENT_NAME}-east
-gcs:
-  enabled: true
-  project: ${PROJECT}
-  jsonKey: '${SA_JSON}'
-
-# Disable minio the default
-minio:
-  enabled: false
-  
-# Disable jenkins
-jenkins:
-  enabled: false
-
-# Configure your Docker registries here
-accounts:
-- name: gcr
-  address: https://gcr.io
-  username: _json_key
-  password: '${SA_JSON}'
-  email: 1234@5678.com
-EOF
     helm install -n adv-k8s stable/spinnaker -f $HOME/spinconfig.yaml --timeout 600
 done
 
