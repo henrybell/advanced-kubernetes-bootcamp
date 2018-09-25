@@ -109,10 +109,10 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
     export PROJECT=$(gcloud info --format='value(config.project)')
     kubectx gke-${CLUSTER_INFO_ARRAY[1]:3:-3}="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
-    kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client
+    # kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client
     # Needed for Spinnaker to be able to authenticate to the API
-    export CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True
-    gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    # export CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True
+    # gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
 
     # Install Prometheus
     export PROJECT=$(gcloud info --format='value(config.project)')
@@ -137,6 +137,13 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     export PATH=$PATH:$HOME/istio-$ISTIO_VERSION/bin
     popd
     kubectl label namespace default istio-injection=enabled
+    kubectl apply -f $HOME/advanced-kubernetes-bootcamp/module-2/spinnaker/sa.yaml
+    kubectl config set-credentials ${CLUSTER_INFO_ARRAY[0]}-token-user --token $(kubectl get secret $(kubectl get serviceaccount spinnaker-service-account -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+	kubectl config set-context gke-${CLUSTER_INFO_ARRAY[1]:3:-3} --user ${CLUSTER_INFO_ARRAY[0]}-token-user
+	kubectl apply -f $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/namespaces.yml
+	kubectl label namespace staging istio-injection=enabled
+	kubectl label namespace production istio-injection=enabled
+	sed -e s/PROJECT_ID/$PROJECT/g $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/seeding.yml | kubectl apply -f -
 done
 
 SOCKSHOP_FILTER="resourceLabels.purpose=workloads AND resourceLabels.deployment=${DEPLOYMENT_NAME} AND resourceLabels.sock-shop=installed"
