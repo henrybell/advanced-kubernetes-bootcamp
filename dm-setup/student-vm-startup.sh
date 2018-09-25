@@ -230,7 +230,7 @@ EOF
     # Create SA token user for gke-sinnaker
     kubectl apply -f $HOME/advanced-kubernetes-bootcamp/module-2/spinnaker/sa.yaml
     kubectl config set-credentials ${CLUSTER_INFO_ARRAY[0]}-token-user --token $(kubectl get secret $(kubectl get serviceaccount spinnaker-service-account -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
-	kubectl config set-context gke-${CLUSTER_INFO_ARRAY[1]:3:-3} --user ${CLUSTER_INFO_ARRAY[0]}-token-user
+	kubectl config set-context gke-spinnaker --user ${CLUSTER_INFO_ARRAY[0]}-token-user
 	
 	# Copy spinnaker service account key to Halyard
     kubectl cp $HOME/spinnaker-key.json default/adv-k8s-spinnaker-halyard-0:/home/spinnaker/.
