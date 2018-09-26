@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: backend
+  namespace: production
+spec:
+  host: backend
+  subsets:
+  - name: canary
+    labels:
+      version: canary
+  - name: production
+    labels:
+      version: production
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: ROUND_ROBIN

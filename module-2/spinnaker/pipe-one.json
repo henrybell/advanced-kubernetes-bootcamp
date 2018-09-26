@@ -1,0 +1,398 @@
+{ "name": "REGION1 - Staging - Canary - Production",
+  "application": "APP_NAME",
+  "appConfig": {},
+  "executionEngine": "v2",
+  "expectedArtifacts": [
+    {
+      "defaultArtifact": {
+        "kind": "default.gcs",
+        "name": "gs://PROJECT_ID-spinnaker/manifests/frontend.yml",
+        "reference": "gs://PROJECT_ID-spinnaker/manifests/frontend.yml",
+        "type": "gcs/object"
+      },
+      "id": "fe2aca14-2931-4195-b5c0-daa0da213bbe",
+      "matchArtifact": {
+        "kind": "gcs",
+        "name": "gs://PROJECT_ID-spinnaker/manifests/frontend.yml",
+        "type": "gcs/object"
+      },
+      "useDefaultArtifact": true,
+      "usePriorExecution": false
+    },
+    {
+      "defaultArtifact": {
+        "kind": "default.gcs",
+        "name": "gs://PROJECT_ID-spinnaker/manifests/backend.yml",
+        "reference": "gs://PROJECT_ID-spinnaker/manifests/backend.yml",
+        "type": "gcs/object"
+      },
+      "id": "50997d91-db51-47e8-8059-e1529a805001",
+      "matchArtifact": {
+        "kind": "gcs",
+        "name": "gs://PROJECT_ID-spinnaker/manifests/backend.yml",
+        "type": "gcs/object"
+      },
+      "useDefaultArtifact": true,
+      "usePriorExecution": false
+    },
+    {
+      "defaultArtifact": {
+        "kind": "default.docker",
+        "name": "gcr.io/PROJECT_ID/frontend",
+        "reference": "gcr.io/PROJECT_ID/frontend",
+        "type": "docker/image"
+      },
+      "id": "23c61e0d-cfce-457f-b3be-917552e9c960",
+      "matchArtifact": {
+        "kind": "docker",
+        "name": "gcr.io/PROJECT_ID/frontend",
+        "type": "docker/image"
+      },
+      "useDefaultArtifact": true,
+      "usePriorArtifact": true,
+      "usePriorExecution": false
+    },
+    {
+      "defaultArtifact": {
+        "kind": "default.docker",
+        "name": "gcr.io/PROJECT_ID/backend",
+        "reference": "gcr.io/PROJECT_ID/backend",
+        "type": "docker/image"
+      },
+      "id": "a15a35a3-3308-4a23-9d67-8a638c99902d",
+      "matchArtifact": {
+        "kind": "docker",
+        "name": "gcr.io/PROJECT_ID/backend",
+        "type": "docker/image"
+      },
+      "useDefaultArtifact": true,
+      "usePriorArtifact": true,
+      "usePriorExecution": false
+    }
+  ],
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "anonymous",
+  "limitConcurrent": true,
+  "stages": [
+    {
+      "account": "gke-ONE",
+      "canary": false,
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "spinnaker-service-account",
+      "manifestArtifactId": "fe2aca14-2931-4195-b5c0-daa0da213bbe",
+      "moniker": {
+        "app": "myapp"
+      },
+      "name": "Deploy Frontend to Staging in GKE REGION1",
+      "namespace": "staging",
+      "refId": "1",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requiredArtifactIds": [
+        "23c61e0d-cfce-457f-b3be-917552e9c960"
+      ],
+      "requisiteStageRefIds": [],
+      "source": "artifact",
+      "type": "deployManifest"
+    },
+    {
+      "account": "gke-ONE",
+      "canary": false,
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "spinnaker-service-account",
+      "manifestArtifactId": "50997d91-db51-47e8-8059-e1529a805001",
+      "moniker": {
+        "app": "myapp"
+      },
+      "name": "Deploy Backend to Staging in GKE REGION1",
+      "namespace": "staging",
+      "refId": "2",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requiredArtifactIds": [
+        "a15a35a3-3308-4a23-9d67-8a638c99902d"
+      ],
+      "requisiteStageRefIds": [],
+      "source": "artifact",
+      "type": "deployManifest"
+    },
+    {
+      "account": "gke-ONE",
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "embedded-artifact",
+      "manifests": [
+        {
+          "apiVersion": "authentication.istio.io/v1alpha1",
+          "kind": "Policy",
+          "metadata": {
+            "name": "backend-permissive",
+            "namespace": "${ namespace }"
+          },
+          "spec": {
+            "peers": [
+              {
+                "mtls": {
+                  "mode": "PERMISSIVE"
+                }
+              }
+            ],
+            "targets": [
+              {
+                "name": "backend"
+              }
+            ]
+          }
+        },
+        {
+          "apiVersion": "batch/v1",
+          "kind": "Job",
+          "metadata": {
+            "name": "check-backend",
+            "namespace": "${ namespace }"
+          },
+          "spec": {
+            "template": {
+              "metadata": {
+                "annotations": {
+                  "sidecar.istio.io/inject": "false"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "args": [
+                      "-c",
+                      "curl http://backend.${ namespace }/"
+                    ],
+                    "command": [
+                      "/bin/sh"
+                    ],
+                    "image": "gcr.io/spinnaker-marketplace/halyard:stable",
+                    "name": "call-curl"
+                  }
+                ],
+                "restartPolicy": "OnFailure"
+              }
+            }
+          }
+        }
+      ],
+      "moniker": {
+        "app": "myapp",
+        "cluster": "backend-test"
+      },
+      "name": "Run Backend tests on GKE REGION1",
+      "namespace": "staging",
+      "refId": "3",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requisiteStageRefIds": [
+        "2"
+      ],
+      "source": "text",
+      "type": "deployManifest"
+    },
+    {
+      "failPipeline": true,
+      "instructions": "<p>Run <code>kubectl proxy &</code>, and check the frontend with <code>~/services/frontend/check.sh</code>.</p>",
+      "judgmentInputs": [],
+      "name": "Manual Judgment",
+      "notifications": [],
+      "refId": "4",
+      "requisiteStageRefIds": [
+        "3",
+        "1"
+      ],
+      "type": "manualJudgment"
+    },
+    {
+      "account": "gke-ONE",
+      "canary": true,
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "spinnaker-service-account",
+      "manifestArtifactId": "fe2aca14-2931-4195-b5c0-daa0da213bbe",
+      "moniker": {
+        "app": "myapp"
+      },
+      "name": "Deploy Frontend Canary on GKE REGION1",
+      "namespace": "production",
+      "refId": "5",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requiredArtifactIds": [
+        "23c61e0d-cfce-457f-b3be-917552e9c960"
+      ],
+      "requisiteStageRefIds": [
+        "4"
+      ],
+      "source": "artifact",
+      "type": "deployManifest"
+    },
+    {
+      "account": "gke-ONE",
+      "canary": true,
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "spinnaker-service-account",
+      "manifestArtifactId": "50997d91-db51-47e8-8059-e1529a805001",
+      "moniker": {
+        "app": "myapp"
+      },
+      "name": "Deploy Backend Canary on GKE REGION1",
+      "namespace": "production",
+      "refId": "6",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requiredArtifactIds": [
+        "a15a35a3-3308-4a23-9d67-8a638c99902d"
+      ],
+      "requisiteStageRefIds": [
+        "4"
+      ],
+      "source": "artifact",
+      "type": "deployManifest"
+    },
+    {
+      "name": "Wait for canary result on GKE REGION1",
+      "refId": "7",
+      "requisiteStageRefIds": [
+        "5",
+        "6"
+      ],
+      "type": "wait",
+      "waitTime": 30
+    },
+    {
+      "failPipeline": true,
+      "judgmentInputs": [],
+      "name": "Manually validate Canary results on GKE REGION1",
+      "notifications": [],
+      "refId": "8",
+      "requisiteStageRefIds": [
+        "7"
+      ],
+      "type": "manualJudgment"
+    },
+    {
+      "account": "gke-ONE",
+      "canary": false,
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "spinnaker-service-account",
+      "manifestArtifactId": "fe2aca14-2931-4195-b5c0-daa0da213bbe",
+      "moniker": {
+        "app": "myapp"
+      },
+      "name": "Deploy Frontend to Production on GKE REGION1",
+      "namespace": "production",
+      "refId": "9",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requiredArtifactIds": [
+        "23c61e0d-cfce-457f-b3be-917552e9c960"
+      ],
+      "requisiteStageRefIds": [
+        "8"
+      ],
+      "source": "artifact",
+      "type": "deployManifest"
+    },
+    {
+      "account": "gke-ONE",
+      "canary": false,
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "spinnaker-service-account",
+      "manifestArtifactId": "50997d91-db51-47e8-8059-e1529a805001",
+      "moniker": {
+        "app": "myapp"
+      },
+      "name": "Deploy Backend to Production on GKE REGION1",
+      "namespace": "production",
+      "refId": "10",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requiredArtifactIds": [
+        "a15a35a3-3308-4a23-9d67-8a638c99902d"
+      ],
+      "requisiteStageRefIds": [
+        "8"
+      ],
+      "source": "artifact",
+      "type": "deployManifest"
+    },
+    {
+      "account": "gke-ONE",
+      "cloudProvider": "kubernetes",
+      "kinds": [
+        "deployment"
+      ],
+      "labelSelectors": {
+        "selectors": [
+          {
+            "key": "canary",
+            "kind": "EQUALS",
+            "values": [
+              "true"
+            ]
+          }
+        ]
+      },
+      "location": "${ namespace }",
+      "name": "Delete all Canaries on GKE REGION1",
+      "namespace": "production",
+      "options": {
+        "cascading": true
+      },
+      "refId": "11",
+      "requisiteStageRefIds": [
+        "9",
+        "10"
+      ],
+      "type": "deleteManifest"
+    }
+  ],
+  "triggers": [
+    {
+      "attributeConstraints": {
+        "eventType": "OBJECT_FINALIZE"
+      },
+      "enabled": true,
+      "expectedArtifactIds": [
+        "fe2aca14-2931-4195-b5c0-daa0da213bbe",
+        "50997d91-db51-47e8-8059-e1529a805001"
+      ],
+      "payloadConstraints": {},
+      "pubsubSystem": "google",
+      "subscriptionName": "gcs-google-pubsub",
+      "type": "pubsub"
+    },
+    {
+      "attributeConstraints": {},
+      "enabled": true,
+      "expectedArtifactIds": [
+        "23c61e0d-cfce-457f-b3be-917552e9c960",
+        "a15a35a3-3308-4a23-9d67-8a638c99902d"
+      ],
+      "payloadConstraints": {
+        "action": "INSERT",
+        "digest": "g.*end@.*"
+      },
+      "pubsubSystem": "google",
+      "subscriptionName": "gcr-google-pubsub",
+      "type": "pubsub"
+    }
+  ],
+  "updateTs": "1535501155000"
+}

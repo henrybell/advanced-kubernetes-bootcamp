@@ -1,0 +1,1 @@
+kubectl exec -it $(kubectl get pod --context gke-spinnaker | grep fortio | awk '{ print $1 }') --context gke-spinnaker -c fortio /usr/local/bin/fortio -- load -c 50 -qps 1000 -t $1 $2
