@@ -49,17 +49,17 @@ echo "Prometheus Port opened on $PROM_PORT_2 for gke-TWO"
 # Expose GRAFANA POD on Port 3000 (1) and 3001 (2)
 GRAFANA_PORT_1=3000
 GRAFANA_PORT_2=3001
-GRAFANA_PORT_3=4000
+#GRAFANA_PORT_3=4000
 GRAFANA_POD_1=$(kubectl get po --namespace istio-system -l "app=grafana" \
   -o jsonpath="{.items[0].metadata.name}" --context gke-ONE)
 GRAFANA_POD_2=$(kubectl get po --namespace istio-system -l "app=grafana" \
   -o jsonpath="{.items[0].metadata.name}" --context gke-TWO)
-GRAFANA_POD_3=$(kubectl get po --namespace istio-system -l "app=grafana" \
-  -o jsonpath="{.items[0].metadata.name}" --context gke-spinnaker)
+#GRAFANA_POD_3=$(kubectl get po --namespace istio-system -l "app=grafana" \
+#  -o jsonpath="{.items[0].metadata.name}" --context gke-spinnaker)
 
 EXISTING_PID_3000=$(sudo netstat -nlp | grep $GRAFANA_PORT_1 | awk '{print $7}' | cut -f1 -d '/')
 EXISTING_PID_3001=$(sudo netstat -nlp | grep $GRAFANA_PORT_2 | awk '{print $7}' | cut -f1 -d '/')
-EXISTING_PID_4000=$(sudo netstat -nlp | grep $GRAFANA_PORT_3 | awk '{print $7}' | cut -f1 -d '/')
+#EXISTING_PID_4000=$(sudo netstat -nlp | grep $GRAFANA_PORT_3 | awk '{print $7}' | cut -f1 -d '/')
 
 if [ -n "$EXISTING_PID_3000" ]; then
   echo "PID $EXISTING_PID_3000 already listening... restarting port-forward"
@@ -71,11 +71,11 @@ if [ -n "$EXISTING_PID_3001" ]; then
   kill $EXISTING_PID_3001
   sleep 5
 fi
-if [ -n "$EXISTING_PID_4000" ]; then
-  echo "PID $EXISTING_PID_4000 already listening... restarting port-forward"
-  kill $EXISTING_PID_4000
-  sleep 5
-fi
+#if [ -n "$EXISTING_PID_4000" ]; then
+#  echo "PID $EXISTING_PID_4000 already listening... restarting port-forward"
+#  kill $EXISTING_PID_4000
+#  sleep 5
+#fi
 
 kubectl port-forward $GRAFANA_POD_1 $GRAFANA_PORT_1:3000 -n istio-system --context gke-ONE >> /dev/null &
 echo "Grafana Port opened on $GRAFANA_PORT_1 for gke-ONE"
@@ -83,8 +83,8 @@ echo "Grafana Port opened on $GRAFANA_PORT_1 for gke-ONE"
 kubectl port-forward $GRAFANA_POD_2 $GRAFANA_PORT_2:3000 -n istio-system --context gke-TWO >> /dev/null &
 echo "Grafana Port opened on $GRAFANA_PORT_2 for gke-TWO"
 
-kubectl port-forward $GRAFANA_POD_3 $GRAFANA_PORT_3:3000 -n istio-system --context gke-spinnaker >> /dev/null &
-echo "Grafana Port opened on $GRAFANA_PORT_3 for gke-spinnaker"
+#kubectl port-forward $GRAFANA_POD_3 $GRAFANA_PORT_3:3000 -n istio-system --context gke-spinnaker >> /dev/null &
+#echo "Grafana Port opened on $GRAFANA_PORT_3 for gke-spinnaker"
 
 
 # Expose JAEGER POD on Port 16686 (1) and 16687 (2)
