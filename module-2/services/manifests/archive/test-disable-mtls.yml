@@ -1,0 +1,21 @@
+apiVersion: "authentication.istio.io/v1alpha1"
+kind: "Policy"
+metadata:
+  name: "backend"
+  namespace: staging
+spec:
+  targets:
+  - name: backend
+  peers:
+  - mtls: {}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+ name: "backend"
+ namespace: staging
+spec:
+ host: "backend.staging.svc.cluster.local"
+ trafficPolicy:
+   tls:
+     mode: DISABLE

@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: backend
+  namespace: production
+spec:
+  hosts:
+    - backend
+  http:
+  - match:
+    - sourceLabels:
+        app: frontend
+        version: canary
+    route:
+    - destination:
+        host: backend
+        subset: canary
+        port:
+          number: 80
+  - match:
+    - sourceLabels:
+        app: frontend
+        version: production
+    route:
+    - destination:
+        host: backend
+        subset: production
+        port:
+          number: 80

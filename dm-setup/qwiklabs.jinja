@@ -66,7 +66,7 @@ resources:
     subnetwork: $(ref.{{ env['deployment'] }}-us-central1.name)
     purpose: workloads
     apiVersion: v1beta1
-    kubernetesVersion: "1.10.4"
+    kubernetesVersion: "1.10"
     monitoringService: monitoring.googleapis.com/kubernetes
     loggingService: logging.googleapis.com/kubernetes
     sockShop: "installed"
@@ -81,7 +81,7 @@ resources:
     subnetwork: $(ref.{{ env['deployment'] }}-us-east4.name)
     purpose: workloads
     apiVersion: v1beta1
-    kubernetesVersion: "1.10.4"
+    kubernetesVersion: "1.10"
     monitoringService: monitoring.googleapis.com/kubernetes
     loggingService: logging.googleapis.com/kubernetes
   metadata:
@@ -94,7 +94,7 @@ resources:
     subnetwork: $(ref.{{ env['deployment'] }}-us-central1.name)
     zone: us-central1-f
     purpose: spinnaker
-    kubernetesVersion: "1.10.4"
+    kubernetesVersion: "1.10"
   metadata:
     dependsOn:
     - {{ env['deployment'] }}-us-central1
@@ -126,7 +126,7 @@ resources:
 - name: student-vm-waiter
   type: waiter.jinja
   properties:
-    timeout: 600s
+    timeout: 1200s
   metadata:
     dependsOn:
     - student-vm

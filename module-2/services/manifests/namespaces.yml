@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  annotations:
+    moniker.spinnaker.io/application: '"myapp"'

@@ -56,6 +56,9 @@ resources:
       - role: roles/owner
         members:
         - serviceAccount:$(ref.sa-{{ env['project_number'] }}-vm.email)
+      - role: roles/pubsub.admin
+        members:
+        - serviceAccount:$(ref.sa-{{ env['project_number'] }}-vm.email)
       - role: roles/storage.objectViewer
         members:
         - serviceAccount:$(ref.sa-{{ env['project_number'] }}-cluster.email)

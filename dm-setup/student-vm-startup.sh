@@ -58,13 +58,36 @@ EOF
 git clone https://github.com/ahmetb/kubectx
 cp kubectx/kube* /usr/local/bin
 
+# Install kubectl aliases
+cd $HOME
+git clone https://github.com/ahmetb/kubectl-aliases.git
+echo "[ -f ~/kubectl-aliases/.kubectl_aliases ] && source ~/kubectl-aliases/.kubectl_aliases" >> $HOME/.bashrc
+source ~/.bashrc
+
+
 # Install kube ps1
 cd $HOME
 git clone https://github.com/jonmosco/kube-ps1.git
+echo 'export KUBE_PS1_SYMBOL_ENABLE=false' >> ~/.bashrc
 echo 'source $HOME/kube-ps1/kube-ps1.sh' >> ~/.bashrc
 export VAR="PS1='[\W \$(kube_ps1)]\$ '"
 echo $VAR >> ~/.bashrc
 source $HOME/.bashrc
+
+# Create application frontend
+git clone https://github.com/ameer00/advanced-kubernetes-bootcamp-1.git ~/advanced-kubernetes-bootcamp   # CHANGE THIS TO MASTER ONCE MERGED
+cd $HOME/advanced-kubernetes-bootcamp/module-2/services/frontend
+export PROJECT=$(gcloud info --format='value(config.project)')
+gcloud builds submit -q --tag gcr.io/$PROJECT/frontend .
+cd $HOME
+
+
+# Create application backend
+cd $HOME/advanced-kubernetes-bootcamp/module-2/services/backend
+export PROJECT=$(gcloud info --format='value(config.project)')
+gcloud builds submit -q --tag gcr.io/$PROJECT/backend .
+cd $HOME
+
 
 # Prometheus resources to install in the clusters
 wget -O prom-rbac.yml https://storage.googleapis.com/stackdriver-prometheus-documentation/rbac-setup.yml
@@ -86,10 +109,10 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
     export PROJECT=$(gcloud info --format='value(config.project)')
     kubectx gke-${CLUSTER_INFO_ARRAY[1]:3:-3}="gke_"$PROJECT"_"${CLUSTER_INFO_ARRAY[1]}_${CLUSTER_INFO_ARRAY[0]}
-    kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client
+    # kubectl create clusterrolebinding client-cluster-admin-binding --clusterrole=cluster-admin --user=client
     # Needed for Spinnaker to be able to authenticate to the API
-    export CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True
-    gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
+    # export CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE=True
+    # gcloud container clusters get-credentials ${CLUSTER_INFO_ARRAY[0]} --zone ${CLUSTER_INFO_ARRAY[1]}
 
     # Install Prometheus
     export PROJECT=$(gcloud info --format='value(config.project)')
@@ -106,12 +129,21 @@ for CLUSTER_INFO in ${WORKLOAD_CLUSTERS}; do
     until timeout 10 helm version; do sleep 10; done
 
     # Install Istio
-    export ISTIO_VERSION=0.8.0
+    export ISTIO_VERSION=1.0.2
     curl -L https://git.io/getLatestIstio | sh -
     pushd istio-${ISTIO_VERSION}/
-    helm install -n istio --namespace=istio-system --set sidecar-injector.enabled=true install/kubernetes/helm/istio
+    kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
+    helm install -n istio --namespace=istio-system install/kubernetes/helm/istio --set kiali.enabled=true --set tracing.enabled=true --set global.mtls.enabled=true --set grafana.enabled=true --set servicegraph.enabled=true
+    export PATH=$PATH:$HOME/istio-$ISTIO_VERSION/bin
     popd
     kubectl label namespace default istio-injection=enabled
+    kubectl apply -f $HOME/advanced-kubernetes-bootcamp/module-2/spinnaker/sa.yaml
+    kubectl config set-credentials ${CLUSTER_INFO_ARRAY[0]}-token-user --token $(kubectl get secret $(kubectl get serviceaccount spinnaker-service-account -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+	kubectl config set-context gke-${CLUSTER_INFO_ARRAY[1]:3:-3} --user ${CLUSTER_INFO_ARRAY[0]}-token-user
+	kubectl apply -f $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/namespaces.yml
+	kubectl label namespace staging istio-injection=enabled
+	kubectl label namespace production istio-injection=enabled
+	sed -e s/PROJECT_ID/$PROJECT/g $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/seeding.yml | kubectl apply -f -
 done
 
 SOCKSHOP_FILTER="resourceLabels.purpose=workloads AND resourceLabels.deployment=${DEPLOYMENT_NAME} AND resourceLabels.sock-shop=installed"
@@ -138,7 +170,7 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     # Wait for tiller to be running
     until timeout 10 helm version; do sleep 10; done
 
-    # Create Spinnaker service account and assign it storage.admin role.
+    # Create Spinnaker service account and assign it roles/owner role.
     gcloud iam service-accounts create spinnaker-sa-${DEPLOYMENT_NAME} --display-name spinnaker-sa-${DEPLOYMENT_NAME}
     export SPINNAKER_SA_EMAIL=$(gcloud iam service-accounts list \
         --filter="displayName:spinnaker-sa-${DEPLOYMENT_NAME}" \
@@ -146,51 +178,95 @@ for CLUSTER_INFO in ${SPINNAKER_CLUSTERS}; do
     export PROJECT=$(gcloud info --format='value(config.project)')
 
     # Move this to DM template
-    gcloud projects add-iam-policy-binding ${PROJECT} --role roles/storage.admin --member serviceAccount:${SPINNAKER_SA_EMAIL}
+    gcloud projects add-iam-policy-binding ${PROJECT} --role roles/owner --member serviceAccount:${SPINNAKER_SA_EMAIL}
     gcloud iam service-accounts keys create spinnaker-key.json --iam-account ${SPINNAKER_SA_EMAIL}
     export BUCKET=${PROJECT}-${DEPLOYMENT_NAME}
+    export BUCKET_CONFIG=${PROJECT}-spinnaker
     gsutil mb -c regional -l us-central1 gs://${BUCKET}
+    gsutil mb -c regional -l us-central1 gs://${BUCKET_CONFIG}
+    
+    # Setup Spinnaker GCS bucket
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	export JSON=$(cat $HOME/spinnaker-key.json)
+	
+	# Store application manifests in GCS bucket
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	sed -e s/PROJECT_ID/$PROJECT/g $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/frontend.yml | gsutil cp - gs://$PROJECT-spinnaker/manifests/frontend.yml
+	sed -e s/PROJECT_ID/$PROJECT/g $HOME/advanced-kubernetes-bootcamp/module-2/services/manifests/backend.yml | gsutil cp - gs://$PROJECT-spinnaker/manifests/backend.yml
 
-    # Use upstream once this PR is merged: https://github.com/kubernetes/charts/pull/5456
-    # git clone https://github.com/viglesiasce/charts -b mcs
-    # pushd charts/stable/spinnaker
-    # helm dep build
-    # popd
 
-    kubectl create secret generic --from-file=config=${HOME}/.kube/config my-kubeconfig
+	# Make GCR repo public for all users
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	gsutil iam ch allUsers:objectViewer gs://artifacts.$PROJECT.appspot.com
+	
+	# Create PubSub topic for GCR
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	export GCR_SUB=my-gcr-sub
+	export GCR_TOPIC="projects/${PROJECT}/topics/gcr"
+	# gcloud pubsub topics create projects/${PROJECT}/topics/gcr
+	gcloud beta pubsub subscriptions create $GCR_SUB --topic $GCR_TOPIC
 
-    export SA_JSON=$(cat spinnaker-key.json)
-    cat > spinnaker-config.yaml <<EOF
-storageBucket: ${BUCKET}
-kubeConfig:
-  enabled: true
-  secretName: my-kubeconfig
-  secretKey: config
-  contexts:
-  - gke_${PROJECT}_us-central1-f_${DEPLOYMENT_NAME}-central
-  - gke_${PROJECT}_us-east4-c_${DEPLOYMENT_NAME}-east
-gcs:
-  enabled: true
-  project: ${PROJECT}
-  jsonKey: '${SA_JSON}'
+	# Create PubSub topic for GCS
+	export PROJECT=$(gcloud info --format='value(config.project)')
+	export GCS_SUB=my-gcs-sub
+	export GCS_TOPIC=spin-gcs-topic
+	export BUCKET=$PROJECT-spinnaker
+	gcloud beta pubsub topics create $GCS_TOPIC
+	gcloud beta pubsub subscriptions create $GCS_SUB --topic $GCS_TOPIC
+	gsutil notification create -t $GCS_TOPIC -f json gs://${BUCKET}
 
-# Disable minio the default
+	cat > $HOME/spinconfig.yaml <<EOF
 minio:
   enabled: false
-  
-# Disable jenkins
-jenkins:
-  enabled: false
-
-# Configure your Docker registries here
-accounts:
-- name: gcr
-  address: https://gcr.io
-  username: _json_key
-  password: '${SA_JSON}'
-  email: 1234@5678.com
+gcs:
+  enabled: true
+  project: $PROJECT
+  bucket: "$BUCKET"
+  jsonKey: '$JSON'
 EOF
-    helm install -n adv-k8s stable/spinnaker -f spinnaker-config.yaml --timeout 600 --version 0.5.0
+	
+	# Install Spinnaker 
+    helm install -n adv-k8s stable/spinnaker -f $HOME/spinconfig.yaml --timeout 600
+    
+    # Create SA token user for gke-sinnaker
+    kubectl apply -f $HOME/advanced-kubernetes-bootcamp/module-2/spinnaker/sa.yaml
+    kubectl config set-credentials ${CLUSTER_INFO_ARRAY[0]}-token-user --token $(kubectl get secret $(kubectl get serviceaccount spinnaker-service-account -n spinnaker -o jsonpath='{.secrets[0].name}') -n spinnaker -o jsonpath='{.data.token}' | base64 --decode)
+	kubectl config set-context gke-spinnaker --user ${CLUSTER_INFO_ARRAY[0]}-token-user
+	
+	# Copy spinnaker service account key to Halyard
+    kubectl cp $HOME/spinnaker-key.json default/adv-k8s-spinnaker-halyard-0:/home/spinnaker/.
+    export PROJECT=$(gcloud info --format='value(config.project)')
+    echo $PROJECT > $HOME/project.txt
+    kubectl cp $HOME/project.txt default/adv-k8s-spinnaker-halyard-0:/home/spinnaker/.
+    
+    # Copy kubeconfig to halyard with the token-user contexts for all three clusters
+	kubectl cp $HOME/.kube/config default/adv-k8s-spinnaker-halyard-0:/home/spinnaker/.kube/.    
+	
+	# Configure spinnaker via halyard
+	## Set context to gke-spinnaker
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "kubectl config use-context gke-spinnaker"
+	
+	## Config gke clusters
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider kubernetes account add gke-central --provider-version v2 --context gke-central"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider kubernetes account add gke-east --provider-version v2 --context gke-east"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config features edit --artifacts true"
+	
+	## Configure GCS
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config artifact gcs account add spinnaker-service-account --json-path /home/spinnaker/spinnaker-key.json"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config artifact gcs enable"
+	
+	## Configure GCR.io
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider docker-registry enable"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config provider docker-registry account add gcr-registry --address gcr.io --username _json_key --password-file /home/spinnaker/spinnaker-key.json"
+	
+	## Configure pubsub
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config pubsub google enable"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config pubsub google subscription add gcr-google-pubsub --subscription-name my-gcr-sub --json-path /home/spinnaker/spinnaker-key.json --project $(cat ~/project.txt) --message-format GCR"
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal config pubsub google subscription add gcs-google-pubsub --subscription-name my-gcs-sub --json-path /home/spinnaker/spinnaker-key.json --project $(cat ~/project.txt) --message-format GCS"
+
+	## Apply new config
+	kubectl exec adv-k8s-spinnaker-halyard-0 -- bash -c "hal deploy apply"
+	
 done
 
 # Signal completion to waiter

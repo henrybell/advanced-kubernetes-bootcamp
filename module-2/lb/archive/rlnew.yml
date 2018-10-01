@@ -1,0 +1,65 @@
+apiVersion: "config.istio.io/v1alpha2"
+kind: memquota
+metadata:
+  name: handler
+  namespace: production
+spec:
+  quotas:
+  - name: requestcount.quota.production
+    maxAmount: 200
+    validDuration: 1s
+    # The first matching override is applied.
+    # A requestcount instance is checked against override dimensions.
+    overrides:
+    # The following override applies to 'frontend'
+    - dimensions:
+        destination: frontend
+      maxAmount: 50
+      validDuration: 1s
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: quota
+metadata:
+  name: requestcount
+  namespace: production
+spec:
+  dimensions:
+    source: source.labels["app"] | source.service | "unknown"
+    destination: destination.labels["app"] | destination.service | "unknown"
+---
+apiVersion: "config.istio.io/v1alpha2"
+kind: rule
+metadata:
+  name: quota
+  namespace: production
+spec:
+  actions:
+  - handler: handler.memquota
+    instances:
+    - requestcount.quota
+---
+apiVersion: config.istio.io/v1alpha2
+kind: QuotaSpec
+metadata:
+  creationTimestamp: null
+  name: request-count
+  namespace: production
+spec:
+  rules:
+  - quotas:
+    - charge: 1
+      quota: RequestCount
+---
+apiVersion: config.istio.io/v1alpha2
+kind: QuotaSpecBinding
+metadata:
+  creationTimestamp: null
+  name: request-count
+  namespace: production
+spec:
+  quotaSpecs:
+  - name: request-count
+    namespace: production
+  services:
+  - name: frontend
+    namespace: production
