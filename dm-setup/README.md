@@ -3,7 +3,7 @@
 ## Quota
 
 * CPU
-  * us-west1 - 28
+  * us-central1 - 28
   * us-east1 - 12
 
 ## IAM
