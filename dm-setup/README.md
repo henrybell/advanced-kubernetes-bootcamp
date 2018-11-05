@@ -4,7 +4,7 @@
 
 * CPU
   * us-central1 - 28
-  * us-east1 - 12
+  * us-east4 - 12
 
 ## IAM
 
